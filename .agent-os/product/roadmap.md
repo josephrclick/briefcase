@@ -7,7 +7,7 @@
 
 ### Features
 
-- [ ] Chrome extension scaffold with Manifest V3 setup - Basic extension structure and permissions `S`
+- [x] Chrome extension scaffold with Manifest V3 setup - Basic extension structure and permissions `S`
 - [ ] Side panel UI with React/Preact components - Main interface for user interaction `M`
 - [ ] Content extraction using Readability - Reliable article text extraction from web pages `M`
 - [ ] OpenAI integration with streaming - API connection with token streaming display `M`
