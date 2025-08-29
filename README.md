@@ -1,3 +1,10 @@
+⚠️ **Work in Progress (Pre-Alpha)**
+
+This extension is under active development. It’s not production-ready and APIs/UI may change without notice.
+If you’re exploring the code, great! If you’re expecting a stable tool, please wait for v1.0.
+
+---
+
 # 🕵️ Briefcase: Your Side-Panel Spy
 
 _tap tap tap_ 📎
@@ -69,8 +76,8 @@ Infiltration → Interrogation → Debrief → Filing
 1. **Clone & build**
 
    ```bash
-   git clone https://github.com/josephrclick/briefcase-v2
-   cd briefcase-v2/apps/extension
+   git clone https://github.com/josephrclick/briefcase
+   cd briefcase/apps/extension
    npm install
    npm run build
    ```

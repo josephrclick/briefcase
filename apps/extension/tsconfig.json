@@ -31,7 +31,8 @@
     "**/*.spec.ts",
     "**/*.spec.tsx",
     "vitest.config.ts",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    "node_modules"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
