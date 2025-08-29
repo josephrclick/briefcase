@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Summarize web page content with AI in a convenient side panel",
   "minimum_chrome_version": "114",
-  "permissions": ["activeTab", "scripting", "storage"],
+  "permissions": ["activeTab", "scripting", "storage", "sidePanel"],
   "side_panel": {
     "default_path": "sidepanel/index.html"
   },

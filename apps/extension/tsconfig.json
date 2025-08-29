@@ -25,5 +25,12 @@
     "types": ["chrome", "vite/client"]
   },
   "include": ["src", "sidepanel", "content", "background", "lib"],
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "node_modules"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
