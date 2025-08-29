@@ -76,8 +76,8 @@ Infiltration → Interrogation → Debrief → Filing
 1. **Clone & build**
 
    ```bash
-   git clone https://github.com/josephrclick/briefcase-v2
-   cd briefcase-v2/apps/extension
+   git clone https://github.com/josephrclick/briefcase
+   cd briefcase/apps/extension
    npm install
    npm run build
    ```
