@@ -1,5 +1,5 @@
 {
-  "name": "briefcase-extension",
+  "name": "briefcase",
   "version": "1.0.0",
   "description": "Chrome side-panel extension for summarizing web content",
   "type": "module",
