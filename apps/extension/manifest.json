@@ -24,5 +24,8 @@
       "48": "public/icon-48.png",
       "128": "public/icon-128.png"
     }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
   }
 }
