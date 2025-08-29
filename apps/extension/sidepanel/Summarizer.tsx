@@ -23,76 +23,31 @@ export const Summarizer: FunctionalComponent = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkExtractionStatus();
+    // Mock extraction status for UI demo
+    setExtractionStatus({
+      extracted: true,
+      charCount: 2847,
+      text: "Mock content extracted from page",
+    });
   }, []);
-
-  const checkExtractionStatus = async () => {
-    try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (!tab?.id) {
-        setExtractionStatus({ extracted: false, error: "No active tab" });
-        return;
-      }
-
-      const response = await chrome.tabs.sendMessage(tab.id, {
-        action: "checkExtraction",
-      });
-
-      setExtractionStatus(response);
-    } catch (err) {
-      setExtractionStatus({
-        extracted: false,
-        error: "This page cannot be summarized",
-      });
-    }
-  };
 
   const handleSummarize = async () => {
     setError(null);
     setSummary(null);
     setIsSummarizing(true);
 
-    try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
+    // Simulate summarization with mock data
+    setTimeout(() => {
+      setSummary({
+        keyPoints: [
+          "This is a mock summary for UI demonstration",
+          "Content extraction will be implemented in the next sprint",
+          "OpenAI integration will follow after that",
+        ],
+        tldr: "This side panel UI is currently in preview mode. Backend functionality including content extraction and AI summarization will be implemented in upcoming sprints.",
       });
-      if (!tab?.id) {
-        throw new Error("No active tab");
-      }
-
-      // Get the extracted text
-      const extraction = await chrome.tabs.sendMessage(tab.id, {
-        action: "getExtractedText",
-      });
-
-      if (!extraction.text) {
-        throw new Error("No text to summarize");
-      }
-
-      // Send to background for summarization
-      const response = await chrome.runtime.sendMessage({
-        action: "summarize",
-        text: extraction.text,
-        options: {
-          length: summaryLength,
-          style: summaryStyle,
-        },
-      });
-
-      if (response.success) {
-        setSummary(response.summary);
-      } else {
-        setError(response.error || "Summarization failed");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to summarize");
-    } finally {
       setIsSummarizing(false);
-    }
+    }, 1500);
   };
 
   const canSummarize = extractionStatus?.extracted && !isSummarizing;

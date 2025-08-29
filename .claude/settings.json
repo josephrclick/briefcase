@@ -7,7 +7,7 @@
       "Bash(npm run typecheck)",
       "Bash(npm run format:fix)",
       "Bash(npm install)",
-      "Bash(npm run -ws *)",
+      "Bash(npm run -ws :*)",
       "Read(packages/**)",
       "Read(apps/**)",
       "Read(_docs/**)"
@@ -17,7 +17,7 @@
       "Write(.env.*)",
       "Edit(package-lock.json)",
       "Write(node_modules/**)",
-      "Bash(rm -rf *)"
+      "Bash(rm -rf :*)"
     ]
   },
   "env": {

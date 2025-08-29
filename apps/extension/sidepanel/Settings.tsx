@@ -70,25 +70,18 @@ export const Settings: FunctionalComponent = () => {
     setMessage(null);
     setIsTesting(true);
 
-    try {
-      const response = await chrome.runtime.sendMessage({
-        action: "testApiConnection",
-        apiKey: settings.apiKey,
-      });
-
-      if (response.success) {
-        setMessage({ type: "success", text: "Connection successful" });
+    // Mock connection test for UI demo
+    setTimeout(() => {
+      if (settings.apiKey.startsWith("sk-") && settings.apiKey.length > 20) {
+        setMessage({ type: "success", text: "Connection successful (mock)" });
       } else {
         setMessage({
           type: "error",
-          text: `Connection failed: ${response.error}`,
+          text: "Connection failed: Invalid API key format (mock)",
         });
       }
-    } catch (error) {
-      setMessage({ type: "error", text: "Connection test failed" });
-    } finally {
       setIsTesting(false);
-    }
+    }, 1000);
   };
 
   const handleDeleteAllData = async () => {
