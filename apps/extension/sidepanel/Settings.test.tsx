@@ -133,6 +133,7 @@ describe("Settings Component", () => {
       const input = screen.getByLabelText(/OpenAI API Key/i);
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
+      await user.clear(input);
       await user.type(input, "sk-proj-valid123key456");
       await user.click(saveButton);
 
@@ -140,6 +141,7 @@ describe("Settings Component", () => {
         expect(chrome.storage.local.set).toHaveBeenCalledWith({
           settings: expect.objectContaining({
             apiKey: "sk-proj-valid123key456",
+            privacyBannerDismissed: false,
           }),
         });
       });
@@ -166,6 +168,7 @@ describe("Settings Component", () => {
         name: /Test Connection/i,
       });
 
+      await user.clear(input);
       await user.type(input, "sk-proj-valid123key456");
       await user.click(testButton);
 
@@ -194,6 +197,7 @@ describe("Settings Component", () => {
         name: /Test Connection/i,
       });
 
+      await user.clear(input);
       await user.type(input, "sk-proj-invalid123");
       await user.click(testButton);
 
@@ -356,6 +360,7 @@ describe("Settings Component", () => {
       const input = screen.getByLabelText(/OpenAI API Key/i);
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
+      await user.clear(input);
       await user.type(input, "sk-proj-valid123key456");
       await user.click(saveButton);
 
@@ -393,6 +398,7 @@ describe("Settings Component", () => {
       const input = screen.getByLabelText(/OpenAI API Key/i);
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
+      await user.clear(input);
       await user.type(input, "sk-proj-valid123key456");
       await user.click(saveButton);
 

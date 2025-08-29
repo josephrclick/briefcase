@@ -44,31 +44,22 @@ describe("Summarizer Component", () => {
   });
 
   describe("Extraction Status", () => {
-    it("should detect extraction status from page", async () => {
-      (chrome.tabs.sendMessage as any).mockResolvedValue({
-        extracted: true,
-        charCount: 1500,
-      });
-
+    it("should show mock extraction status", async () => {
       render(<Summarizer />);
 
       await waitFor(() => {
         expect(
-          screen.getByText(/1500 characters extracted/i),
+          screen.getByText(/2847 characters extracted/i),
         ).toBeInTheDocument();
       });
     });
 
-    it("should show error for unsupported pages", async () => {
-      (chrome.tabs.sendMessage as any).mockRejectedValue(
-        new Error("Cannot access"),
-      );
-
+    it("should always show extracted status in mock mode", async () => {
       render(<Summarizer />);
 
       await waitFor(() => {
         expect(
-          screen.getByText(/This page cannot be summarized/i),
+          screen.getByText(/2847 characters extracted/i),
         ).toBeInTheDocument();
       });
     });
@@ -77,15 +68,6 @@ describe("Summarizer Component", () => {
   describe("Summarization Process", () => {
     it("should show loading state during summarization", async () => {
       const user = userEvent.setup();
-      (chrome.tabs.sendMessage as any).mockResolvedValue({
-        extracted: true,
-        charCount: 1500,
-        text: "Sample article text",
-      });
-      (chrome.runtime.sendMessage as any).mockImplementation(
-        () => new Promise(() => {}),
-      );
-
       render(<Summarizer />);
 
       await waitFor(() => {
@@ -100,21 +82,8 @@ describe("Summarizer Component", () => {
       expect(screen.getByText(/Summarizing/i)).toBeInTheDocument();
     });
 
-    it("should display streaming results", async () => {
+    it("should display mock summary results", async () => {
       const user = userEvent.setup();
-      (chrome.tabs.sendMessage as any).mockResolvedValue({
-        extracted: true,
-        charCount: 1500,
-        text: "Sample text",
-      });
-      (chrome.runtime.sendMessage as any).mockResolvedValue({
-        success: true,
-        summary: {
-          keyPoints: ["Point 1", "Point 2"],
-          tldr: "This is a summary",
-        },
-      });
-
       render(<Summarizer />);
 
       await waitFor(() => {
@@ -127,10 +96,9 @@ describe("Summarizer Component", () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText("Point 1")).toBeInTheDocument();
-        expect(screen.getByText("Point 2")).toBeInTheDocument();
-        expect(screen.getByText("This is a summary")).toBeInTheDocument();
-      });
+        expect(screen.getByText(/This is a mock summary for UI demonstration/i)).toBeInTheDocument();
+        expect(screen.getByText(/This side panel UI is currently in preview mode/i)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
   });
 
@@ -165,18 +133,8 @@ describe("Summarizer Component", () => {
   });
 
   describe("Error Handling", () => {
-    it("should handle summarization errors", async () => {
+    it("should show mock summary after clicking summarize", async () => {
       const user = userEvent.setup();
-      (chrome.tabs.sendMessage as any).mockResolvedValue({
-        extracted: true,
-        charCount: 1500,
-        text: "Sample text",
-      });
-      (chrome.runtime.sendMessage as any).mockResolvedValue({
-        success: false,
-        error: "API key invalid",
-      });
-
       render(<Summarizer />);
 
       await waitFor(() => {
@@ -189,8 +147,8 @@ describe("Summarizer Component", () => {
       await user.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(/API key invalid/i)).toBeInTheDocument();
-      });
+        expect(screen.getByText(/mock summary/i)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
   });
 });

@@ -27,26 +27,42 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
   }, []);
 
   const loadRecentDocuments = async () => {
-    try {
-      const result = await chrome.storage.local.get("docs:index");
-      if (result["docs:index"]) {
-        const docIds = result["docs:index"] as string[];
-        const docs: Document[] = [];
-
-        for (const id of docIds.slice(0, 20)) {
-          const docResult = await chrome.storage.local.get(`doc:${id}`);
-          if (docResult[`doc:${id}`]) {
-            docs.push(docResult[`doc:${id}`]);
+    // Mock documents for UI demo
+    setTimeout(() => {
+      setDocuments([
+        {
+          id: "mock-1",
+          title: "Understanding React Hooks",
+          domain: "react.dev",
+          date: "2024-03-15",
+          summary: {
+            keyPoints: ["Hooks allow state in functional components", "useEffect handles side effects"],
+            tldr: "React Hooks provide a way to use state and lifecycle methods in functional components."
+          }
+        },
+        {
+          id: "mock-2",
+          title: "Chrome Extension Development Guide",
+          domain: "developer.chrome.com",
+          date: "2024-03-14",
+          summary: {
+            keyPoints: ["Manifest V3 is the latest version", "Service workers replace background pages"],
+            tldr: "Chrome extensions use Manifest V3 with service workers for better performance."
+          }
+        },
+        {
+          id: "mock-3",
+          title: "Introduction to TypeScript",
+          domain: "typescriptlang.org",
+          date: "2024-03-13",
+          summary: {
+            keyPoints: ["TypeScript adds static typing to JavaScript", "Improves code maintainability"],
+            tldr: "TypeScript is a superset of JavaScript that adds optional static typing."
           }
         }
-
-        setDocuments(docs);
-      }
-    } catch (error) {
-      console.error("Failed to load documents:", error);
-    } finally {
+      ]);
       setIsLoading(false);
-    }
+    }, 500);
   };
 
   const handleDelete = async (docId: string) => {

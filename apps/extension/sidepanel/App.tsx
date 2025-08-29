@@ -33,6 +33,9 @@ export const App: FunctionalComponent = () => {
 
   return (
     <div className="app">
+      <div className="mock-mode-banner">
+        UI Preview Mode - Backend integration pending
+      </div>
       <header className="header">
         <h1>Briefcase</h1>
       </header>
