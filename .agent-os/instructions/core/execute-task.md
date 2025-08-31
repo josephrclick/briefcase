@@ -143,7 +143,7 @@ Execute the parent task and all sub-tasks in order using test-driven development
     IF sub-task 1 is "Write tests for [feature]":
       - Write all tests for the parent feature
       - Include unit tests, integration tests, edge cases
-      - Run tests to ensure they fail appropriately
+      - Use the test-runner subagent to run tests to ensure they fail appropriately
       - Mark sub-task 1 complete
   </subtask_1_tests>
 
@@ -158,7 +158,7 @@ Execute the parent task and all sub-tasks in order using test-driven development
 
   <final_subtask_verification>
     IF final sub-task is "Verify all tests pass":
-      - Run entire test suite
+      - Use the test-runner subagent to run entire test suite
       - Fix any remaining failures
       - Ensure no regressions
       - Mark final sub-task complete

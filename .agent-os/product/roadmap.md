@@ -10,7 +10,7 @@
 - [x] Chrome extension scaffold with Manifest V3 setup - Basic extension structure and permissions `S`
 - [x] Side panel UI with React/Preact components - Main interface for user interaction `M`
 - [x] Content extraction using Readability - Reliable article text extraction from web pages `M`
-- [ ] OpenAI integration with streaming - API connection with token streaming display `M`
+- [x] OpenAI integration with streaming - API connection with token streaming display `M`
 - [ ] Local storage repository implementation - chrome.storage.local with FIFO retention `M`
 - [x] Error handling for common failure modes - Friendly messages for PDFs, iframes, loading pages `S`
 - [x] Settings page with API key management - Secure storage and validation of OpenAI key `S`
@@ -28,12 +28,12 @@
 
 ### Features
 
-- [ ] Summary customization controls - Length (Brief/Medium) and Style (Bullets/Plain) options `S`
+- [x] Summary customization controls - Length (Brief/Medium) and Style (Bullets/Plain) options `S`
 - [ ] Recent summaries list - Quick access to last 20 items with search `M`
-- [ ] Privacy banner and onboarding - First-use disclosure and feature introduction `S`
-- [ ] Retry mechanism for failures - Smart retry with timeout detection `S`
+- [x] Privacy banner and onboarding - First-use disclosure and feature introduction `S`
+- [x] Retry mechanism for failures - Smart retry with timeout detection `S`
 - [ ] Advanced extraction fallbacks - Custom extractors for edge cases `L`
-- [ ] Delete all data functionality - Complete local data removal option `XS`
+- [x] Delete all data functionality - Complete local data removal option `XS`
 - [ ] Export summaries feature - Download summaries as JSON/Markdown `S`
 
 ### Dependencies
