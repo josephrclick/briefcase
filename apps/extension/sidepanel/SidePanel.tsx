@@ -2,7 +2,7 @@ import { FunctionalComponent } from "preact";
 import { useState, useEffect } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
 import { EnhancedSettings } from "./EnhancedSettings";
-import { SettingsService, Settings } from "../lib/settings-service";
+import { SettingsService, SettingsData } from "../lib/settings-service";
 
 interface TabProps {
   id: string;
@@ -35,7 +35,7 @@ interface ExtractedContent {
 
 export const SidePanel: FunctionalComponent = () => {
   const [activeTab, setActiveTab] = useState("summarize");
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const [settings, setSettings] = useState<SettingsData | null>(null);
   const [extractedContent, setExtractedContent] = useState<ExtractedContent>({
     text: "",
     charCount: 0,

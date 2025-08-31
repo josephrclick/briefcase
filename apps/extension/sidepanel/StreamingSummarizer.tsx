@@ -1,4 +1,5 @@
 import { FunctionalComponent } from "preact";
+import { JSX } from "preact/jsx-runtime";
 import { useState, useEffect, useRef } from "preact/hooks";
 import {
   SettingsService,

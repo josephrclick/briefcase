@@ -18,18 +18,16 @@ const BASE_RETRY_DELAY = 1000;
 
 export class OpenAIProvider {
   private client: OpenAI;
-  private apiKey: string;
 
   constructor(apiKey: string) {
     if (!apiKey) {
       throw new Error("API key is required");
     }
 
-    if (!apiKey.startsWith("sk-") || apiKey.length < 20) {
+    if (!apiKey.startsWith("sk-") || apiKey.length < 40) {
       throw new Error("Invalid API key format");
     }
 
-    this.apiKey = apiKey;
     this.client = new OpenAI({
       apiKey,
       dangerouslyAllowBrowser: true,

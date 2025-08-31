@@ -20,10 +20,11 @@ interface ContentMessage {
 export class ContentScript {
   private extractor = new ContentExtractor();
   private stabilityDetector = new DOMStabilityDetector();
-  private selectionHandler: ((text: string) => void) | null = null;
+  private selectionHandler: ((evt: MouseEvent) => void) | null = null;
 
   async init() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      void sender; // mark as used to satisfy noUnusedParameters
       if (request.action === "EXTRACT_CONTENT") {
         this.handleExtraction().then(sendResponse);
         return true;
@@ -93,16 +94,16 @@ export class ContentScript {
 
   private enableManualSelection() {
     if (this.selectionHandler) {
-      document.removeEventListener("mouseup", this.handleSelection);
+      document.removeEventListener("mouseup", this.selectionHandler);
     }
 
-    this.selectionHandler = this.handleSelection.bind(this);
+    this.selectionHandler = this.handleSelection;
     document.addEventListener("mouseup", this.selectionHandler);
 
     this.showSelectionIndicator();
   }
 
-  private handleSelection = () => {
+  private handleSelection = (_evt: MouseEvent) => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) return;
 

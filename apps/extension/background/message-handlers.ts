@@ -1,4 +1,4 @@
-import { SettingsService, Settings } from "../lib/settings-service";
+import { SettingsService, SettingsData } from "../lib/settings-service";
 import { OpenAIProvider } from "../lib/openai-provider";
 
 export interface Message {
@@ -33,7 +33,7 @@ export class MessageHandlers {
     );
 
     // Cancel all active streams
-    for (const [tabId, controller] of this.abortControllers) {
+    for (const [, controller] of this.abortControllers) {
       controller.abort();
     }
     this.abortControllers.clear();
@@ -197,7 +197,7 @@ export class MessageHandlers {
   }
 
   private async handleUpdateSettings(
-    data: Partial<Settings>,
+    data: Partial<SettingsData>,
     sendResponse: (response: any) => void,
   ) {
     try {

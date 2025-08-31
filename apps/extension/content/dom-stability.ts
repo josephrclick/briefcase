@@ -4,8 +4,8 @@ export class DOMStabilityDetector {
 
   waitForStability(doc: Document): Promise<void> {
     return new Promise((resolve) => {
-      let mutationTimer: NodeJS.Timeout | null = null;
-      let timeoutTimer: NodeJS.Timeout;
+      let mutationTimer: ReturnType<typeof setTimeout> | null = null;
+      let timeoutTimer: ReturnType<typeof setTimeout>;
 
       const observer = new MutationObserver(() => {
         if (mutationTimer) {

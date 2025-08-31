@@ -42,9 +42,10 @@ export const Settings: FunctionalComponent = () => {
   };
 
   const validateApiKey = (key: string): boolean => {
-    // OpenAI API keys start with 'sk-' and contain alphanumeric characters and hyphens
-    const apiKeyPattern = /^sk-[A-Za-z0-9-]{20,}$/;
-    return apiKeyPattern.test(key);
+    // OpenAI API keys start with 'sk-' and have at least 40 total characters
+    // Format can be: sk-[40+ chars] or sk-proj-[40+ chars]
+    const apiKeyPattern = /^sk-[A-Za-z0-9-]{40,}$/;
+    return apiKeyPattern.test(key) && key.startsWith("sk-");
   };
 
   const handleSave = async () => {
@@ -73,7 +74,7 @@ export const Settings: FunctionalComponent = () => {
 
     // Mock connection test for UI demo
     setTimeout(() => {
-      if (settings.apiKey.startsWith("sk-") && settings.apiKey.length > 20) {
+      if (settings.apiKey.startsWith("sk-") && settings.apiKey.length >= 40) {
         setMessage({ type: "success", text: "Connection successful (mock)" });
       } else {
         setMessage({
