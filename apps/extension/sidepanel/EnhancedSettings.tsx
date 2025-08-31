@@ -5,6 +5,7 @@ import {
   SettingsData,
   SummarizationSettings,
   DEFAULT_SETTINGS,
+  OpenAIModel,
 } from "../lib/settings-service";
 
 interface EnhancedSettingsProps {
@@ -63,6 +64,18 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
       ...settings,
       summarization: { ...settings.summarization, ...updates },
     });
+  };
+
+  const handleModelChange = async (model: OpenAIModel) => {
+    setSettings({ ...settings, selectedModel: model });
+    try {
+      await SettingsService.saveModelSelection(model);
+      if (onSettingsUpdate) {
+        onSettingsUpdate();
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to save model selection" });
+    }
   };
 
   const handleSaveApiKey = async () => {
@@ -179,14 +192,6 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     });
   };
 
-  const handleChangeApiKey = () => {
-    setConfigCollapsed(false);
-    // Save the expanded state
-    SettingsService.saveSettings({
-      openaiConfigCollapsed: false,
-    });
-  };
-
   if (isLoading) {
     return <div className="settings-loading">Loading settings...</div>;
   }
@@ -223,13 +228,7 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
           )}
         </div>
 
-        {configCollapsed && settings.openaiApiKey ? (
-          <div className="collapsed-content">
-            <button onClick={handleChangeApiKey} className="secondary">
-              Change API Key
-            </button>
-          </div>
-        ) : (
+        {!configCollapsed && (
           <>
             <div className="form-group">
               <label htmlFor="api-key">API Key</label>
@@ -265,6 +264,30 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
                 >
                   OpenAI Platform
                 </a>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="ai-model">AI Model</label>
+              <select
+                id="ai-model"
+                value={settings.selectedModel || "gpt-4o-mini"}
+                onChange={(e) =>
+                  handleModelChange(
+                    (e.target as HTMLSelectElement).value as OpenAIModel,
+                  )
+                }
+              >
+                <option value="gpt-5-nano">
+                  GPT-5 Nano (Fastest, Cheapest)
+                </option>
+                <option value="gpt-4o-mini">GPT-4o Mini (Balanced)</option>
+                <option value="gpt-4.1-nano">
+                  GPT-4.1 Nano (Fast, Large Context)
+                </option>
+              </select>
+              <div className="help-text">
+                Choose the AI model for summarization
               </div>
             </div>
 

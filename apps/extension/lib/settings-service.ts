@@ -7,12 +7,15 @@ export interface SummarizationSettings {
 
 export type ThemePreference = "light" | "dark" | "system";
 
+export type OpenAIModel = "gpt-5-nano" | "gpt-4o-mini" | "gpt-4.1-nano";
+
 export interface SettingsData {
   openaiApiKey: string;
   summarization: SummarizationSettings;
   privacyBannerDismissed: boolean;
   openaiConfigCollapsed?: boolean;
   theme?: ThemePreference;
+  selectedModel?: OpenAIModel;
 }
 
 export const DEFAULT_SETTINGS: SettingsData = {
@@ -24,6 +27,7 @@ export const DEFAULT_SETTINGS: SettingsData = {
   privacyBannerDismissed: false,
   openaiConfigCollapsed: false,
   theme: "system",
+  selectedModel: "gpt-4o-mini",
 };
 
 export class SettingsService {
@@ -76,6 +80,13 @@ export class SettingsService {
    */
   static async dismissPrivacyBanner(): Promise<void> {
     await this.saveSettings({ privacyBannerDismissed: true });
+  }
+
+  /**
+   * Save selected model
+   */
+  static async saveModelSelection(model: OpenAIModel): Promise<void> {
+    await this.saveSettings({ selectedModel: model });
   }
 
   /**
@@ -142,6 +153,6 @@ export class SettingsService {
     if (!settings.openaiApiKey) {
       return null;
     }
-    return new OpenAIProvider(settings.openaiApiKey);
+    return new OpenAIProvider(settings.openaiApiKey, settings.selectedModel);
   }
 }

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import { EnhancedSettings } from "./EnhancedSettings";
-import { SettingsService } from "../lib/settings-service";
+import { SettingsService, OpenAIModel } from "../lib/settings-service";
 import { vi } from "vitest";
 
 vi.mock("../lib/settings-service");
@@ -11,6 +11,7 @@ describe("EnhancedSettings Component", () => {
     openaiApiKey: "",
     summarization: { length: "brief", style: "bullets" },
     privacyBannerDismissed: false,
+    selectedModel: "gpt-4o-mini" as OpenAIModel,
   };
 
   beforeEach(() => {
@@ -20,6 +21,7 @@ describe("EnhancedSettings Component", () => {
     (SettingsService.validateApiKeyFormat as any).mockReturnValue(true);
     (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
     (SettingsService.clearAllData as any).mockResolvedValue(undefined);
+    (SettingsService.saveModelSelection as any).mockResolvedValue(undefined);
   });
 
   describe("Initial Rendering", () => {
@@ -251,9 +253,9 @@ describe("EnhancedSettings Component", () => {
         ).toBeInTheDocument();
       });
 
-      // After save, the section should be collapsed and show Change API Key button
+      // After save, the section should be collapsed with only the expand button
       expect(
-        screen.getByRole("button", { name: /Change API Key/i }),
+        screen.getByRole("button", { name: /Expand/i }),
       ).toBeInTheDocument();
       // Test Connection button should not be visible when collapsed
       expect(
@@ -730,13 +732,13 @@ describe("EnhancedSettings Component", () => {
       // API key input should not be visible when collapsed
       expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
 
-      // Should show "Change API Key" button when collapsed
+      // Should show only expand button when collapsed
       expect(
-        screen.getByRole("button", { name: /Change API Key/i }),
+        screen.getByRole("button", { name: /Expand/i }),
       ).toBeInTheDocument();
     });
 
-    it("should expand OpenAI configuration when Change API Key is clicked", async () => {
+    it("should expand OpenAI configuration when expand button is clicked", async () => {
       const settingsWithKey = {
         ...mockSettings,
         openaiApiKey: "sk-test123456789abcdefghijklmnop",
@@ -749,22 +751,22 @@ describe("EnhancedSettings Component", () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole("button", { name: /Change API Key/i }),
+          screen.getByRole("button", { name: /Expand/i }),
         ).toBeInTheDocument();
       });
 
-      const changeKeyButton = screen.getByRole("button", {
-        name: /Change API Key/i,
+      const expandButton = screen.getByRole("button", {
+        name: /Expand/i,
       });
-      await user.click(changeKeyButton);
+      await user.click(expandButton);
 
       // API key input should now be visible
       expect(screen.getByLabelText("API Key")).toBeInTheDocument();
 
-      // Change API Key button should not be visible when expanded
+      // Expand button should change to Collapse when expanded
       expect(
-        screen.queryByRole("button", { name: /Change API Key/i }),
-      ).not.toBeInTheDocument();
+        screen.getByRole("button", { name: /Collapse/i }),
+      ).toBeInTheDocument();
     });
 
     it("should show expanded configuration by default for new users without API key", async () => {
@@ -777,9 +779,9 @@ describe("EnhancedSettings Component", () => {
       // API key input should be visible for new users
       expect(screen.getByLabelText("API Key")).toBeInTheDocument();
 
-      // Should not show "Change API Key" button when expanded
+      // Should NOT show Collapse button for new users without API key
       expect(
-        screen.queryByRole("button", { name: /Change API Key/i }),
+        screen.queryByRole("button", { name: /Collapse/i }),
       ).not.toBeInTheDocument();
     });
 
@@ -883,11 +885,125 @@ describe("EnhancedSettings Component", () => {
       await user.click(saveKeyButton);
 
       await waitFor(() => {
-        // After save, should automatically collapse and show Change API Key button
+        // After save, should automatically collapse and show expand button
         expect(
-          screen.getByRole("button", { name: /Change API Key/i }),
+          screen.getByRole("button", { name: /Expand/i }),
         ).toBeInTheDocument();
         expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Model Selection", () => {
+    it("should display model selection dropdown", async () => {
+      render(<EnhancedSettings />);
+      await waitFor(() => {
+        expect(screen.getByLabelText("AI Model")).toBeInTheDocument();
+      });
+    });
+
+    it("should load default model as gpt-4o-mini", async () => {
+      render(<EnhancedSettings />);
+      await waitFor(() => {
+        const modelSelect = screen.getByLabelText(
+          "AI Model",
+        ) as HTMLSelectElement;
+        expect(modelSelect.value).toBe("gpt-4o-mini");
+      });
+    });
+
+    it("should display all three model options with friendly names", async () => {
+      render(<EnhancedSettings />);
+      await waitFor(() => {
+        expect(
+          screen.getByText("GPT-5 Nano (Fastest, Cheapest)"),
+        ).toBeInTheDocument();
+        expect(screen.getByText("GPT-4o Mini (Balanced)")).toBeInTheDocument();
+        expect(
+          screen.getByText("GPT-4.1 Nano (Fast, Large Context)"),
+        ).toBeInTheDocument();
+      });
+    });
+
+    it("should save selected model when changed", async () => {
+      const user = userEvent.setup();
+      (SettingsService.saveModelSelection as any).mockResolvedValue(undefined);
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("AI Model")).toBeInTheDocument();
+      });
+
+      const modelSelect = screen.getByLabelText(
+        "AI Model",
+      ) as HTMLSelectElement;
+      await user.selectOptions(modelSelect, "gpt-5-nano");
+
+      await waitFor(() => {
+        expect(SettingsService.saveModelSelection).toHaveBeenCalledWith(
+          "gpt-5-nano",
+        );
+      });
+    });
+
+    it("should update settings when model is changed", async () => {
+      const user = userEvent.setup();
+      const onSettingsUpdate = vi.fn();
+      (SettingsService.saveModelSelection as any).mockResolvedValue(undefined);
+
+      render(<EnhancedSettings onSettingsUpdate={onSettingsUpdate} />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("AI Model")).toBeInTheDocument();
+      });
+
+      const modelSelect = screen.getByLabelText(
+        "AI Model",
+      ) as HTMLSelectElement;
+      await user.selectOptions(modelSelect, "gpt-4.1-nano");
+
+      await waitFor(() => {
+        expect(onSettingsUpdate).toHaveBeenCalled();
+      });
+    });
+
+    it("should persist model selection across component remounts", async () => {
+      const settingsWithModel = {
+        ...mockSettings,
+        selectedModel: "gpt-5-nano" as OpenAIModel,
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(
+        settingsWithModel,
+      );
+
+      const { unmount } = render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        const modelSelect = screen.getByLabelText(
+          "AI Model",
+        ) as HTMLSelectElement;
+        expect(modelSelect.value).toBe("gpt-5-nano");
+      });
+
+      unmount();
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        const modelSelect = screen.getByLabelText(
+          "AI Model",
+        ) as HTMLSelectElement;
+        expect(modelSelect.value).toBe("gpt-5-nano");
+      });
+    });
+
+    it("should not display Change API Key button when API key is not configured", async () => {
+      render(<EnhancedSettings />);
+      await waitFor(() => {
+        expect(
+          screen.queryByRole("button", { name: /Change API Key/i }),
+        ).not.toBeInTheDocument();
       });
     });
   });

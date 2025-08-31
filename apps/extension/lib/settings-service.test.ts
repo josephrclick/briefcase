@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { SettingsService, DEFAULT_SETTINGS } from "./settings-service";
+import {
+  SettingsService,
+  DEFAULT_SETTINGS,
+  OpenAIModel,
+} from "./settings-service";
 import { OpenAIProvider } from "./openai-provider";
 import {
   MOCK_API_KEY,
@@ -22,6 +26,7 @@ describe("SettingsService", () => {
     it("should return default settings when storage is empty", async () => {
       const settings = await SettingsService.loadSettings();
       expect(settings).toEqual(DEFAULT_SETTINGS);
+      expect(settings.selectedModel).toBe("gpt-4o-mini");
     });
 
     it("should load settings from storage", async () => {
@@ -29,13 +34,15 @@ describe("SettingsService", () => {
         openaiApiKey: MOCK_API_KEY,
         summarization: { length: "medium", style: "plain" },
         privacyBannerDismissed: true,
+        selectedModel: "gpt-5-nano" as OpenAIModel,
       };
       (chrome.storage.local.get as any).mockResolvedValue({
         settings: storedSettings,
       });
 
       const settings = await SettingsService.loadSettings();
-      expect(settings).toEqual(storedSettings);
+      expect(settings).toEqual({ ...DEFAULT_SETTINGS, ...storedSettings });
+      expect(settings.selectedModel).toBe("gpt-5-nano");
     });
 
     it("should merge with defaults when some fields are missing", async () => {
@@ -69,6 +76,9 @@ describe("SettingsService", () => {
         openaiApiKey: MOCK_API_KEY_ALT,
         summarization: { length: "medium" as const, style: "plain" as const },
         privacyBannerDismissed: true,
+        openaiConfigCollapsed: false,
+        theme: "system" as const,
+        selectedModel: "gpt-4o-mini" as OpenAIModel,
       };
 
       await SettingsService.saveSettings(newSettings);
@@ -83,6 +93,9 @@ describe("SettingsService", () => {
         openaiApiKey: MOCK_API_KEY,
         summarization: { length: "brief" as const, style: "bullets" as const },
         privacyBannerDismissed: false,
+        openaiConfigCollapsed: false,
+        theme: "system" as const,
+        selectedModel: "gpt-4o-mini" as OpenAIModel,
       };
       (chrome.storage.local.get as any).mockResolvedValue({
         settings: existingSettings,
@@ -237,6 +250,40 @@ describe("SettingsService", () => {
     });
   });
 
+  describe("saveModelSelection", () => {
+    it("should save selected model", async () => {
+      const selectedModel: OpenAIModel = "gpt-4.1-nano";
+
+      await SettingsService.saveModelSelection(selectedModel);
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        settings: expect.objectContaining({
+          selectedModel: "gpt-4.1-nano",
+        }),
+      });
+    });
+
+    it("should preserve other settings when saving model", async () => {
+      const existingSettings = {
+        ...DEFAULT_SETTINGS,
+        openaiApiKey: MOCK_API_KEY,
+        privacyBannerDismissed: true,
+      };
+      (chrome.storage.local.get as any).mockResolvedValue({
+        settings: existingSettings,
+      });
+
+      await SettingsService.saveModelSelection("gpt-5-nano");
+
+      expect(chrome.storage.local.set).toHaveBeenCalledWith({
+        settings: {
+          ...existingSettings,
+          selectedModel: "gpt-5-nano",
+        },
+      });
+    });
+  });
+
   describe("clearAllData", () => {
     it("should call chrome.storage.local.clear", async () => {
       await SettingsService.clearAllData();
@@ -247,8 +294,12 @@ describe("SettingsService", () => {
   describe("getProvider", () => {
     it("should return configured provider when API key exists", async () => {
       const apiKey = MOCK_API_KEY;
+      const model: OpenAIModel = "gpt-4o-mini";
       (chrome.storage.local.get as any).mockResolvedValue({
-        settings: { openaiApiKey: apiKey },
+        settings: {
+          openaiApiKey: apiKey,
+          selectedModel: model,
+        },
       });
 
       const mockProvider = {} as OpenAIProvider;
@@ -257,7 +308,7 @@ describe("SettingsService", () => {
       const provider = await SettingsService.getProvider();
 
       expect(provider).toBe(mockProvider);
-      expect(OpenAIProvider).toHaveBeenCalledWith(apiKey);
+      expect(OpenAIProvider).toHaveBeenCalledWith(apiKey, model);
     });
 
     it("should return null when no API key is set", async () => {
@@ -269,6 +320,21 @@ describe("SettingsService", () => {
 
       expect(provider).toBeNull();
       expect(OpenAIProvider).not.toHaveBeenCalled();
+    });
+
+    it("should use default model when selectedModel is not set", async () => {
+      const apiKey = MOCK_API_KEY;
+      (chrome.storage.local.get as any).mockResolvedValue({
+        settings: { openaiApiKey: apiKey },
+      });
+
+      const mockProvider = {} as OpenAIProvider;
+      (OpenAIProvider as any).mockImplementation(() => mockProvider);
+
+      const provider = await SettingsService.getProvider();
+
+      expect(provider).toBe(mockProvider);
+      expect(OpenAIProvider).toHaveBeenCalledWith(apiKey, "gpt-4o-mini");
     });
   });
 });
