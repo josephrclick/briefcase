@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, vi, Mock } from "vitest";
 import { OpenAIProvider } from "./openai-provider";
 import OpenAI from "openai";
+import { MOCK_API_KEY } from "../src/test-utils/constants";
 
 vi.mock("openai");
 
 describe("OpenAIProvider", () => {
   let provider: OpenAIProvider;
   let mockOpenAIClient: any;
-  const mockApiKey = "sk-test123456789abcdefghijklmnop";
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -24,14 +24,14 @@ describe("OpenAIProvider", () => {
     };
     (OpenAI as unknown as Mock).mockImplementation(() => mockOpenAIClient);
 
-    provider = new OpenAIProvider(mockApiKey);
+    provider = new OpenAIProvider(MOCK_API_KEY);
   });
 
   describe("Constructor", () => {
     it("should create an instance with the provided API key", () => {
       expect(provider).toBeDefined();
       expect(OpenAI).toHaveBeenCalledWith({
-        apiKey: mockApiKey,
+        apiKey: MOCK_API_KEY,
         dangerouslyAllowBrowser: true,
       });
     });

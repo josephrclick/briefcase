@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import { Settings } from "./Settings";
+import { MOCK_API_KEY } from "../src/test-utils/constants";
 
 describe("Settings Component", () => {
   beforeEach(() => {
@@ -61,7 +62,7 @@ describe("Settings Component", () => {
 
   describe("API Key Management", () => {
     it("should load existing API key from storage on mount", async () => {
-      const mockKey = "sk-test123";
+      const mockKey = MOCK_API_KEY;
       (chrome.storage.local.get as any).mockResolvedValue({
         settings: { apiKey: mockKey },
       });
@@ -134,13 +135,13 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456789");
+      await user.type(input, MOCK_API_KEY);
       await user.click(saveButton);
 
       await waitFor(() => {
         expect(chrome.storage.local.set).toHaveBeenCalledWith({
           settings: expect.objectContaining({
-            apiKey: "sk-proj-valid123key456789",
+            apiKey: MOCK_API_KEY,
             privacyBannerDismissed: false,
           }),
         });
@@ -169,7 +170,7 @@ describe("Settings Component", () => {
       });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456789");
+      await user.type(input, MOCK_API_KEY);
       await user.click(testButton);
 
       expect(screen.getByText(/Testing connection/i)).toBeInTheDocument();
@@ -198,7 +199,7 @@ describe("Settings Component", () => {
       });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-invalid123");
+      await user.type(input, "sk-invalid-short");
       await user.click(testButton);
 
       await waitFor(() => {
@@ -361,7 +362,7 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456789");
+      await user.type(input, MOCK_API_KEY);
       await user.click(saveButton);
 
       expect(screen.getByText(/Saving/i)).toBeInTheDocument();
@@ -399,7 +400,7 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456789");
+      await user.type(input, MOCK_API_KEY);
       await user.click(saveButton);
 
       await waitFor(() => {
