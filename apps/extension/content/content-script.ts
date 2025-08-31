@@ -1,5 +1,11 @@
 import { ContentExtractor } from "./extractor";
 import { DOMStabilityDetector } from "./dom-stability";
+import {
+  UnsupportedPageError,
+  ManualSelectionError,
+  ExtractionError,
+} from "./errors";
+import { withRetry, extractionRetryOptions } from "./retry";
 
 interface ContentMessage {
   type: "EXTRACT_CONTENT" | "MANUAL_SELECTION";
@@ -32,17 +38,17 @@ export class ContentScript {
   private async handleExtraction(): Promise<ContentMessage> {
     try {
       if (this.isUnsupportedPage()) {
-        return {
-          type: "EXTRACT_CONTENT",
-          payload: {
-            error: "Unsupported page type (PDF, iframe, or app)",
-          },
-        };
+        const reason = this.getUnsupportedReason();
+        throw new UnsupportedPageError(reason);
       }
 
       await this.stabilityDetector.waitForStability(document);
 
-      const result = this.extractor.extract(document);
+      // Wrap extraction in retry logic for transient failures
+      const result = await withRetry(
+        () => Promise.resolve(this.extractor.extract(document)),
+        extractionRetryOptions,
+      );
 
       if (!result.success) {
         return {
@@ -69,10 +75,17 @@ export class ContentScript {
         },
       };
     } catch (error) {
+      let errorMessage: string;
+      if (error instanceof ExtractionError) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = error instanceof Error ? error.message : "Unknown error";
+      }
+
       return {
         type: "EXTRACT_CONTENT",
         payload: {
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
         },
       };
     }
@@ -97,7 +110,9 @@ export class ContentScript {
 
     if (text.length < 100) {
       this.showTooltip("Please select at least 100 characters");
-      return;
+      throw new ManualSelectionError(
+        `Selection too short: ${text.length} characters`,
+      );
     }
 
     chrome.runtime.sendMessage({
@@ -165,6 +180,14 @@ export class ContentScript {
     if (contentType.includes("pdf")) return true;
 
     return false;
+  }
+
+  private getUnsupportedReason(): string {
+    if (window.location.href.endsWith(".pdf")) return "PDF document";
+    if (window.self !== window.top) return "iframe content";
+    const contentType = document.contentType || "";
+    if (contentType.includes("pdf")) return "PDF content type";
+    return "unsupported page type";
   }
 }
 

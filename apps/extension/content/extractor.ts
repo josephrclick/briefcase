@@ -1,5 +1,6 @@
 import { Readability, isProbablyReaderable } from "@mozilla/readability";
 import { HeuristicExtractor } from "./heuristic-extractor";
+import { MinimumContentError, ReadabilityError } from "./errors";
 
 export interface ExtractionResult {
   success: boolean;
@@ -38,22 +39,18 @@ export class ContentExtractor {
       const article = reader.parse();
 
       if (!article) {
-        return {
-          success: false,
-          method: "readability",
-          error: "Readability failed to extract content",
-        };
+        throw new ReadabilityError("Parser returned null");
       }
 
-      if (
-        !article.textContent ||
-        article.textContent.length < MINIMUM_CONTENT_LENGTH
-      ) {
-        return {
-          success: false,
-          method: "readability",
-          error: `Extracted content too short (minimum ${MINIMUM_CONTENT_LENGTH} characters required)`,
-        };
+      if (!article.textContent) {
+        throw new ReadabilityError("No text content found");
+      }
+
+      if (article.textContent.length < MINIMUM_CONTENT_LENGTH) {
+        throw new MinimumContentError(
+          article.textContent.length,
+          MINIMUM_CONTENT_LENGTH,
+        );
       }
 
       const normalizedText = this.normalizeText(
@@ -77,6 +74,16 @@ export class ContentExtractor {
         },
       };
     } catch (error) {
+      if (
+        error instanceof MinimumContentError ||
+        error instanceof ReadabilityError
+      ) {
+        return {
+          success: false,
+          method: "readability",
+          error: error.message,
+        };
+      }
       return {
         success: false,
         method: "readability",

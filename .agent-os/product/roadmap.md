@@ -9,11 +9,11 @@
 
 - [x] Chrome extension scaffold with Manifest V3 setup - Basic extension structure and permissions `S`
 - [x] Side panel UI with React/Preact components - Main interface for user interaction `M`
-- [ ] Content extraction using Readability - Reliable article text extraction from web pages `M`
+- [x] Content extraction using Readability - Reliable article text extraction from web pages `M`
 - [ ] OpenAI integration with streaming - API connection with token streaming display `M`
 - [ ] Local storage repository implementation - chrome.storage.local with FIFO retention `M`
-- [ ] Error handling for common failure modes - Friendly messages for PDFs, iframes, loading pages `S`
-- [ ] Settings page with API key management - Secure storage and validation of OpenAI key `S`
+- [x] Error handling for common failure modes - Friendly messages for PDFs, iframes, loading pages `S`
+- [x] Settings page with API key management - Secure storage and validation of OpenAI key `S`
 
 ### Dependencies
 

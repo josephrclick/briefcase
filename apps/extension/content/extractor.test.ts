@@ -77,7 +77,7 @@ describe("ContentExtractor", () => {
       expect(result).toEqual({
         success: false,
         method: "readability",
-        error: "Readability failed to extract content",
+        error: "Readability extraction failed: Parser returned null",
       });
     });
 
@@ -100,7 +100,7 @@ describe("ContentExtractor", () => {
       expect(result).toEqual({
         success: false,
         method: "readability",
-        error: "Extracted content too short (minimum 800 characters required)",
+        error: "Content too short: 13 characters (minimum 800 required)",
       });
     });
 
