@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { SettingsService, DEFAULT_SETTINGS } from "./settings-service";
 import { OpenAIProvider } from "./openai-provider";
+import {
+  MOCK_API_KEY,
+  MOCK_API_KEY_ALT,
+  INVALID_API_KEY_SHORT,
+  INVALID_API_KEY_NO_PREFIX,
+} from "../src/test-utils/constants";
 
 vi.mock("./openai-provider");
 
@@ -20,7 +26,7 @@ describe("SettingsService", () => {
 
     it("should load settings from storage", async () => {
       const storedSettings = {
-        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiApiKey: MOCK_API_KEY,
         summarization: { length: "medium", style: "plain" },
         privacyBannerDismissed: true,
       };
@@ -34,7 +40,7 @@ describe("SettingsService", () => {
 
     it("should merge with defaults when some fields are missing", async () => {
       const partialSettings = {
-        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiApiKey: MOCK_API_KEY,
       };
       (chrome.storage.local.get as any).mockResolvedValue({
         settings: partialSettings,
@@ -60,7 +66,7 @@ describe("SettingsService", () => {
   describe("saveSettings", () => {
     it("should save full settings object", async () => {
       const newSettings = {
-        openaiApiKey: "sk-new123456789abcdefghijklmnop",
+        openaiApiKey: MOCK_API_KEY_ALT,
         summarization: { length: "medium" as const, style: "plain" as const },
         privacyBannerDismissed: true,
       };
@@ -74,7 +80,7 @@ describe("SettingsService", () => {
 
     it("should merge with existing settings when saving partial data", async () => {
       const existingSettings = {
-        openaiApiKey: "sk-old123456789abcdefghijklmnop",
+        openaiApiKey: MOCK_API_KEY,
         summarization: { length: "brief" as const, style: "bullets" as const },
         privacyBannerDismissed: false,
       };
@@ -83,13 +89,13 @@ describe("SettingsService", () => {
       });
 
       await SettingsService.saveSettings({
-        openaiApiKey: "sk-new123456789abcdefghijklmnop",
+        openaiApiKey: MOCK_API_KEY_ALT,
       });
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         settings: {
           ...existingSettings,
-          openaiApiKey: "sk-new123456789abcdefghijklmnop",
+          openaiApiKey: MOCK_API_KEY_ALT,
         },
       });
     });
@@ -105,12 +111,12 @@ describe("SettingsService", () => {
         settings: existingSettings,
       });
 
-      await SettingsService.saveApiKey("sk-test123456789abcdefghijklmnop");
+      await SettingsService.saveApiKey(MOCK_API_KEY);
 
       expect(chrome.storage.local.set).toHaveBeenCalledWith({
         settings: {
           ...existingSettings,
-          openaiApiKey: "sk-test123456789abcdefghijklmnop",
+          openaiApiKey: MOCK_API_KEY,
         },
       });
     });
@@ -147,24 +153,18 @@ describe("SettingsService", () => {
 
   describe("validateApiKeyFormat", () => {
     it("should validate correct API key format", () => {
-      expect(
-        SettingsService.validateApiKeyFormat(
-          "sk-test123456789abcdefghijklmnop",
-        ),
-      ).toBe(true);
-      expect(
-        SettingsService.validateApiKeyFormat("sk-proj-abc123def456ghi789jkl"),
-      ).toBe(true);
+      expect(SettingsService.validateApiKeyFormat(MOCK_API_KEY)).toBe(true);
+      expect(SettingsService.validateApiKeyFormat(MOCK_API_KEY_ALT)).toBe(true);
     });
 
     it("should reject invalid API key formats", () => {
       expect(SettingsService.validateApiKeyFormat("")).toBe(false);
       expect(SettingsService.validateApiKeyFormat("invalid")).toBe(false);
-      expect(SettingsService.validateApiKeyFormat("sk-short")).toBe(false);
+      expect(SettingsService.validateApiKeyFormat(INVALID_API_KEY_SHORT)).toBe(
+        false,
+      );
       expect(
-        SettingsService.validateApiKeyFormat(
-          "not-sk-prefix123456789abcdefghijklmnop",
-        ),
+        SettingsService.validateApiKeyFormat(INVALID_API_KEY_NO_PREFIX),
       ).toBe(false);
     });
   });
@@ -176,9 +176,7 @@ describe("SettingsService", () => {
       };
       (OpenAIProvider as any).mockImplementation(() => mockProvider);
 
-      const result = await SettingsService.testApiKey(
-        "sk-test123456789abcdefghijklmnop",
-      );
+      const result = await SettingsService.testApiKey(MOCK_API_KEY);
 
       expect(result).toEqual({ success: true });
       expect(mockProvider.validateApiKey).toHaveBeenCalled();
@@ -200,9 +198,7 @@ describe("SettingsService", () => {
       };
       (OpenAIProvider as any).mockImplementation(() => mockProvider);
 
-      const result = await SettingsService.testApiKey(
-        "sk-test123456789abcdefghijklmnop",
-      );
+      const result = await SettingsService.testApiKey(MOCK_API_KEY);
 
       expect(result).toEqual({
         success: false,
@@ -218,9 +214,7 @@ describe("SettingsService", () => {
       };
       (OpenAIProvider as any).mockImplementation(() => mockProvider);
 
-      const result = await SettingsService.testApiKey(
-        "sk-test123456789abcdefghijklmnop",
-      );
+      const result = await SettingsService.testApiKey(MOCK_API_KEY);
 
       expect(result).toEqual({
         success: false,
@@ -234,9 +228,7 @@ describe("SettingsService", () => {
       };
       (OpenAIProvider as any).mockImplementation(() => mockProvider);
 
-      const result = await SettingsService.testApiKey(
-        "sk-test123456789abcdefghijklmnop",
-      );
+      const result = await SettingsService.testApiKey(MOCK_API_KEY);
 
       expect(result).toEqual({
         success: false,
@@ -254,7 +246,7 @@ describe("SettingsService", () => {
 
   describe("getProvider", () => {
     it("should return configured provider when API key exists", async () => {
-      const apiKey = "sk-test123456789abcdefghijklmnop";
+      const apiKey = MOCK_API_KEY;
       (chrome.storage.local.get as any).mockResolvedValue({
         settings: { openaiApiKey: apiKey },
       });

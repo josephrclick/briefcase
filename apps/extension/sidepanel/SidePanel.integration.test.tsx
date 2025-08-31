@@ -4,6 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { SidePanel } from "./SidePanel";
 import { SettingsService } from "../lib/settings-service";
 import { OpenAIProvider } from "../lib/openai-provider";
+import { MOCK_API_KEY } from "../src/test-utils/constants";
+import {
+  createMockTab,
+  setupChromeTabsMock,
+  setupChromeStorageMock,
+  setupAbortControllerMock,
+} from "../src/test-utils/chrome-mocks";
 
 // Mock chrome API
 global.chrome = {
@@ -19,6 +26,7 @@ global.chrome = {
       get: vi.fn(),
       set: vi.fn(),
       remove: vi.fn(),
+      clear: vi.fn(),
     },
   },
   tabs: {
@@ -32,9 +40,17 @@ vi.mock("../lib/openai-provider");
 
 describe("SidePanel Integration Tests", () => {
   let mockProvider: any;
+  let storageHelper: ReturnType<typeof setupChromeStorageMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Setup Chrome API mocks
+    setupChromeTabsMock([
+      createMockTab({ url: "https://example.com/article" }),
+    ]);
+    storageHelper = setupChromeStorageMock();
+    setupAbortControllerMock();
 
     // Default mock settings
     const defaultSettings = {
@@ -111,7 +127,7 @@ describe("SidePanel Integration Tests", () => {
 
       // Enter API key
       const apiKeyInput = screen.getByLabelText("API Key");
-      await user.type(apiKeyInput, "sk-test123456789abcdefghijklmnop");
+      await user.type(apiKeyInput, MOCK_API_KEY);
 
       // Save settings
       const saveButton = screen.getByRole("button", { name: /Save Settings/i });
@@ -120,7 +136,7 @@ describe("SidePanel Integration Tests", () => {
       await waitFor(() => {
         expect(SettingsService.saveSettings).toHaveBeenCalledWith(
           expect.objectContaining({
-            openaiApiKey: "sk-test123456789abcdefghijklmnop",
+            openaiApiKey: MOCK_API_KEY,
           }),
         );
       });
@@ -136,7 +152,7 @@ describe("SidePanel Integration Tests", () => {
 
       // Enter API key
       const apiKeyInput = screen.getByLabelText("API Key");
-      await user.type(apiKeyInput, "sk-test123456789abcdefghijklmnop");
+      await user.type(apiKeyInput, MOCK_API_KEY);
 
       // Test connection
       const testButton = screen.getByRole("button", {
@@ -181,10 +197,12 @@ describe("SidePanel Integration Tests", () => {
 
   describe("Text Extraction Flow", () => {
     it("should extract text from current tab", async () => {
-      // Mock active tab
-      (chrome.tabs.query as any).mockResolvedValue([
-        { id: 1, url: "https://example.com/article" },
-      ]);
+      // Active tab is already mocked in beforeEach
+      const activeTab = createMockTab({
+        id: 1,
+        url: "https://example.com/article",
+      });
+      setupChromeTabsMock([activeTab]);
 
       // Mock text extraction response
       (chrome.tabs.sendMessage as any).mockResolvedValue({
@@ -219,9 +237,8 @@ describe("SidePanel Integration Tests", () => {
     });
 
     it("should handle extraction errors gracefully", async () => {
-      (chrome.tabs.query as any).mockResolvedValue([
-        { id: 1, url: "chrome://extensions" },
-      ]);
+      const chromeTab = createMockTab({ id: 1, url: "chrome://extensions" });
+      setupChromeTabsMock([chromeTab]);
 
       (chrome.tabs.sendMessage as any).mockRejectedValue(
         new Error("Cannot access chrome:// URLs"),
@@ -249,10 +266,12 @@ describe("SidePanel Integration Tests", () => {
       (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
       (SettingsService.getProvider as any).mockResolvedValue(mockProvider);
 
-      // Mock extracted text
-      (chrome.tabs.query as any).mockResolvedValue([
-        { id: 1, url: "https://example.com/article" },
-      ]);
+      // Mock extracted text - tab already setup in beforeEach
+      const activeTab = createMockTab({
+        id: 1,
+        url: "https://example.com/article",
+      });
+      setupChromeTabsMock([activeTab]);
 
       (chrome.tabs.sendMessage as any).mockResolvedValue({
         success: true,
