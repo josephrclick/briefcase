@@ -134,13 +134,13 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456");
+      await user.type(input, "sk-proj-valid123key456789");
       await user.click(saveButton);
 
       await waitFor(() => {
         expect(chrome.storage.local.set).toHaveBeenCalledWith({
           settings: expect.objectContaining({
-            apiKey: "sk-proj-valid123key456",
+            apiKey: "sk-proj-valid123key456789",
             privacyBannerDismissed: false,
           }),
         });
@@ -169,7 +169,7 @@ describe("Settings Component", () => {
       });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456");
+      await user.type(input, "sk-proj-valid123key456789");
       await user.click(testButton);
 
       expect(screen.getByText(/Testing connection/i)).toBeInTheDocument();
@@ -361,7 +361,7 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456");
+      await user.type(input, "sk-proj-valid123key456789");
       await user.click(saveButton);
 
       expect(screen.getByText(/Saving/i)).toBeInTheDocument();
@@ -399,7 +399,7 @@ describe("Settings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save/i });
 
       await user.clear(input);
-      await user.type(input, "sk-proj-valid123key456");
+      await user.type(input, "sk-proj-valid123key456789");
       await user.click(saveButton);
 
       await waitFor(() => {

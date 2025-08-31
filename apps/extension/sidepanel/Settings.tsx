@@ -14,6 +14,7 @@ export const Settings: FunctionalComponent = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [message, setMessage] = useState<{
@@ -41,8 +42,8 @@ export const Settings: FunctionalComponent = () => {
   };
 
   const validateApiKey = (key: string): boolean => {
-    // OpenAI API keys start with 'sk-' and are typically 48+ characters
-    const apiKeyPattern = /^sk-[A-Za-z0-9]{20,}$/;
+    // OpenAI API keys start with 'sk-' and contain alphanumeric characters and hyphens
+    const apiKeyPattern = /^sk-[A-Za-z0-9-]{20,}$/;
     return apiKeyPattern.test(key);
   };
 
@@ -85,6 +86,7 @@ export const Settings: FunctionalComponent = () => {
   };
 
   const handleDeleteAllData = async () => {
+    setIsDeleting(true);
     try {
       await chrome.storage.local.clear();
       setSettings({ apiKey: "", privacyBannerDismissed: false });
@@ -92,6 +94,8 @@ export const Settings: FunctionalComponent = () => {
       setShowDeleteConfirm(false);
     } catch (error) {
       setMessage({ type: "error", text: "Failed to delete data" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -182,8 +186,12 @@ export const Settings: FunctionalComponent = () => {
               <button onClick={() => setShowDeleteConfirm(false)}>
                 Cancel
               </button>
-              <button className="confirm-delete" onClick={handleDeleteAllData}>
-                Confirm Delete
+              <button
+                className="confirm-delete"
+                onClick={handleDeleteAllData}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Confirm Delete"}
               </button>
             </div>
           </div>
