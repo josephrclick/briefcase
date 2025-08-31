@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { SidePanel } from "./SidePanel";
 import { SettingsService } from "../lib/settings-service";
 import { OpenAIProvider } from "../lib/openai-provider";
+import { DocumentRepository } from "../lib/document-repository";
 import { MOCK_API_KEY } from "../src/test-utils/constants";
 import {
   createMockTab,
@@ -37,13 +38,28 @@ global.chrome = {
 
 vi.mock("../lib/settings-service");
 vi.mock("../lib/openai-provider");
+vi.mock("../lib/document-repository");
 
 describe("SidePanel Integration Tests", () => {
   let mockProvider: any;
+  let mockDocumentRepository: any;
   let storageHelper: ReturnType<typeof setupChromeStorageMock>;
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Setup document repository mock
+    mockDocumentRepository = {
+      saveDocument: vi.fn().mockResolvedValue(undefined),
+      getDocument: vi.fn(),
+      getRecentDocuments: vi.fn().mockResolvedValue([]),
+      deleteDocument: vi.fn(),
+      clearAllDocuments: vi.fn(),
+      getStorageUsage: vi.fn().mockResolvedValue(0),
+    };
+    (DocumentRepository as any).mockImplementation(
+      () => mockDocumentRepository,
+    );
 
     // Setup Chrome API mocks
     setupChromeTabsMock([
@@ -673,6 +689,184 @@ describe("SidePanel Integration Tests", () => {
       await waitFor(() => {
         expect(SettingsService.saveSummarizationSettings).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("Document Saving", () => {
+    beforeEach(() => {
+      // Mock settings with API key configured
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: MOCK_API_KEY,
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+      (SettingsService.getProvider as any).mockResolvedValue(mockProvider);
+    });
+
+    it("should save document after successful summarization", async () => {
+      const user = userEvent.setup();
+
+      const mockStream = new ReadableStream({
+        async start(controller) {
+          controller.enqueue("This is a test summary.");
+          controller.close();
+        },
+      });
+
+      mockProvider.summarize.mockReturnValue(mockStream);
+
+      (chrome.tabs.query as any).mockResolvedValue([
+        {
+          id: 1,
+          url: "https://example.com/article",
+          title: "Test Article",
+        },
+      ]);
+
+      (chrome.tabs.sendMessage as any).mockResolvedValue({
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000),
+          metadata: {
+            title: "Test Article",
+            url: "https://example.com/article",
+            author: "Test Author",
+            publishedDate: "2025-01-01",
+            wordCount: 250,
+          },
+        },
+      });
+
+      render(<SidePanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/1000 characters extracted/i),
+        ).toBeInTheDocument();
+      });
+
+      const summarizeButton = screen.getByRole("button", {
+        name: /Summarize Page/i,
+      });
+      await user.click(summarizeButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Summary complete")).toBeInTheDocument();
+      });
+
+      // Verify document was saved with correct data
+      await waitFor(() => {
+        expect(mockDocumentRepository.saveDocument).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: expect.stringMatching(/^\d+$/),
+            url: "https://example.com/article",
+            title: "Test Article",
+            domain: "example.com",
+            rawText: "A".repeat(1000),
+            summaryText: "This is a test summary.",
+            metadata: expect.objectContaining({
+              author: "Test Author",
+              publishedDate: "2025-01-01",
+              wordCount: 250,
+            }),
+            createdAt: expect.any(String),
+            summarizedAt: expect.any(String),
+          }),
+        );
+      });
+    });
+
+    it("should not save document if summarization fails", async () => {
+      const user = userEvent.setup();
+
+      // Ensure provider is available
+      (SettingsService.getProvider as any).mockResolvedValue(mockProvider);
+
+      mockProvider.summarize.mockImplementation(() => {
+        throw new Error("API Error");
+      });
+
+      (chrome.tabs.query as any).mockResolvedValue([
+        { id: 1, url: "https://example.com" },
+      ]);
+
+      (chrome.tabs.sendMessage as any).mockResolvedValue({
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000),
+        },
+      });
+
+      render(<SidePanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/1000 characters extracted/i),
+        ).toBeInTheDocument();
+      });
+
+      const summarizeButton = screen.getByRole("button", {
+        name: /Summarize Page/i,
+      });
+      await user.click(summarizeButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/API Error/i)).toBeInTheDocument();
+      });
+
+      // Document should not be saved
+      expect(mockDocumentRepository.saveDocument).not.toHaveBeenCalled();
+    });
+
+    it("should handle document save errors gracefully", async () => {
+      const user = userEvent.setup();
+
+      mockDocumentRepository.saveDocument.mockRejectedValue(
+        new Error("Storage quota exceeded"),
+      );
+
+      const mockStream = new ReadableStream({
+        async start(controller) {
+          controller.enqueue("Summary content");
+          controller.close();
+        },
+      });
+
+      mockProvider.summarize.mockReturnValue(mockStream);
+
+      (chrome.tabs.query as any).mockResolvedValue([
+        { id: 1, url: "https://example.com" },
+      ]);
+
+      (chrome.tabs.sendMessage as any).mockResolvedValue({
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000),
+        },
+      });
+
+      render(<SidePanel />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/1000 characters extracted/i),
+        ).toBeInTheDocument();
+      });
+
+      const summarizeButton = screen.getByRole("button", {
+        name: /Summarize Page/i,
+      });
+      await user.click(summarizeButton);
+
+      await waitFor(() => {
+        expect(screen.getByText("Summary complete")).toBeInTheDocument();
+      });
+
+      // Summary should still be displayed even if save fails
+      expect(screen.getByText(/Summary content/)).toBeInTheDocument();
+
+      // Save should have been attempted
+      expect(mockDocumentRepository.saveDocument).toHaveBeenCalled();
     });
   });
 });

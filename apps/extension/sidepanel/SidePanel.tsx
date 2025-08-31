@@ -3,6 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
 import { EnhancedSettings } from "./EnhancedSettings";
 import { SettingsService, SettingsData } from "../lib/settings-service";
+import { DocumentRepository, Document } from "../lib/document-repository";
 
 interface TabProps {
   id: string;
@@ -42,6 +43,7 @@ export const SidePanel: FunctionalComponent = () => {
   });
   const [isExtracting, setIsExtracting] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(false);
+  const [documentRepository] = useState(() => new DocumentRepository());
 
   useEffect(() => {
     loadSettings();
@@ -129,6 +131,53 @@ export const SidePanel: FunctionalComponent = () => {
     extractTextFromCurrentTab();
   };
 
+  const handleSummarizationComplete = async (summaryText: string) => {
+    try {
+      // Get current tab URL for document
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      const activeTab = tabs?.[0];
+
+      // Extract domain from URL
+      let domain = "";
+      if (activeTab?.url) {
+        try {
+          const url = new URL(activeTab.url);
+          domain = url.hostname;
+        } catch {}
+      }
+
+      // Create document object
+      const document: Document = {
+        id: Date.now().toString(),
+        url: activeTab?.url || extractedContent.metadata?.url || "",
+        title:
+          activeTab?.title || extractedContent.metadata?.title || "Untitled",
+        domain: domain,
+        rawText: extractedContent.text,
+        summaryText: summaryText,
+        metadata: {
+          author: extractedContent.metadata?.author,
+          publishedDate: extractedContent.metadata?.publishedDate,
+          wordCount:
+            extractedContent.metadata?.wordCount ||
+            Math.round(extractedContent.text.split(/\s+/).length),
+        },
+        createdAt: new Date().toISOString(),
+        summarizedAt: new Date().toISOString(),
+      };
+
+      // Save document to storage
+      await documentRepository.saveDocument(document);
+      console.log("Document saved successfully");
+    } catch (error) {
+      console.error("Failed to save document:", error);
+      // Don't show error to user - summary is still displayed
+    }
+  };
+
   return (
     <div className="side-panel">
       {showPrivacyBanner && (
@@ -181,6 +230,7 @@ export const SidePanel: FunctionalComponent = () => {
               <StreamingSummarizer
                 extractedText={extractedContent.text}
                 charCount={extractedContent.charCount}
+                onSummarizationComplete={handleSummarizationComplete}
               />
             )}
 

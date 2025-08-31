@@ -1,5 +1,9 @@
 import { FunctionalComponent } from "preact";
 import { useState, useEffect } from "preact/hooks";
+import {
+  DocumentRepository,
+  Document as StoredDocument,
+} from "../lib/document-repository";
 
 interface Document {
   id: string;
@@ -10,6 +14,8 @@ interface Document {
     keyPoints: string[];
     tldr: string;
   };
+  rawText?: string;
+  summaryText?: string;
 }
 
 interface RecentListProps {
@@ -21,58 +27,50 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
 }) => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [documentRepository] = useState(() => new DocumentRepository());
 
   useEffect(() => {
     loadRecentDocuments();
   }, []);
 
   const loadRecentDocuments = async () => {
-    // Mock documents for UI demo
-    setTimeout(() => {
-      setDocuments([
-        {
-          id: "mock-1",
-          title: "Understanding React Hooks",
-          domain: "react.dev",
-          date: "2024-03-15",
-          summary: {
-            keyPoints: ["Hooks allow state in functional components", "useEffect handles side effects"],
-            tldr: "React Hooks provide a way to use state and lifecycle methods in functional components."
-          }
-        },
-        {
-          id: "mock-2",
-          title: "Chrome Extension Development Guide",
-          domain: "developer.chrome.com",
-          date: "2024-03-14",
-          summary: {
-            keyPoints: ["Manifest V3 is the latest version", "Service workers replace background pages"],
-            tldr: "Chrome extensions use Manifest V3 with service workers for better performance."
-          }
-        },
-        {
-          id: "mock-3",
-          title: "Introduction to TypeScript",
-          domain: "typescriptlang.org",
-          date: "2024-03-13",
-          summary: {
-            keyPoints: ["TypeScript adds static typing to JavaScript", "Improves code maintainability"],
-            tldr: "TypeScript is a superset of JavaScript that adds optional static typing."
-          }
+    setIsLoading(true);
+    try {
+      // Load real documents from storage
+      const storedDocs = await documentRepository.getRecentDocuments(20);
+
+      // Transform stored documents to display format
+      const displayDocs: Document[] = storedDocs.map((doc) => {
+        let domain = doc.domain || "Unknown";
+        if (!doc.domain && doc.url) {
+          try {
+            domain = new URL(doc.url).hostname;
+          } catch {}
         }
-      ]);
+
+        return {
+          id: doc.id,
+          title: doc.title || "Untitled",
+          domain: domain,
+          date: new Date(doc.createdAt).toLocaleDateString(),
+          summary: doc.summary,
+          rawText: doc.rawText,
+          summaryText: doc.summaryText,
+        };
+      });
+
+      setDocuments(displayDocs);
+    } catch (error) {
+      console.error("Failed to load recent documents:", error);
+      setDocuments([]);
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleDelete = async (docId: string) => {
     try {
-      await chrome.storage.local.remove(`doc:${docId}`);
-      const result = await chrome.storage.local.get("docs:index");
-      const docIds = (result["docs:index"] || []) as string[];
-      const newDocIds = docIds.filter((id) => id !== docId);
-      await chrome.storage.local.set({ "docs:index": newDocIds });
-
+      await documentRepository.deleteDocument(docId);
       setDocuments(documents.filter((doc) => doc.id !== docId));
     } catch (error) {
       console.error("Failed to delete document:", error);
@@ -106,6 +104,12 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
                   {new Date(doc.date).toLocaleDateString()}
                 </span>
               </div>
+              {doc.summaryText && (
+                <div className="summary-preview">
+                  {doc.summaryText.slice(0, 150)}
+                  {doc.summaryText.length > 150 && "..."}
+                </div>
+              )}
             </div>
             <button
               className="delete-button"
