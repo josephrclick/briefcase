@@ -2,7 +2,11 @@ import { FunctionalComponent } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
 import { EnhancedSettings } from "./EnhancedSettings";
-import { SettingsService, SettingsData } from "../lib/settings-service";
+import {
+  SettingsService,
+  SettingsData,
+  SummarizationSettings,
+} from "../lib/settings-service";
 import {
   DocumentRepository,
   Document,
@@ -39,6 +43,7 @@ interface ExtractedContent {
     wordCount?: number;
   };
   error?: string;
+  showRefreshButton?: boolean;
 }
 
 type UIState = "idle" | "extracting" | "extracted" | "error";
@@ -68,10 +73,7 @@ export const SidePanel: FunctionalComponent = () => {
     loadCurrentTabInfo();
 
     // Set up tab change listener
-    const handleTabChange = (activeInfo: {
-      tabId: number;
-      windowId: number;
-    }) => {
+    const handleTabChange = () => {
       // Reset state when tab changes
       setUiState("idle");
       setExtractedContent({ text: "", charCount: 0 });
@@ -224,7 +226,7 @@ export const SidePanel: FunctionalComponent = () => {
         charCount: 0,
         error: errorMessage,
         showRefreshButton,
-      } as any);
+      });
       setUiState("error");
     } finally {
       setIsExtracting(false);
@@ -258,9 +260,15 @@ export const SidePanel: FunctionalComponent = () => {
     key: "length" | "style",
     value: string,
   ) => {
-    const newSummarizationSettings = {
-      ...settings?.summarization,
-      [key]: value,
+    const newSummarizationSettings: SummarizationSettings = {
+      length:
+        key === "length"
+          ? (value as "brief" | "medium")
+          : settings?.summarization?.length || "brief",
+      style:
+        key === "style"
+          ? (value as "bullets" | "plain")
+          : settings?.summarization?.style || "bullets",
     };
 
     // Update local state first
@@ -371,7 +379,7 @@ export const SidePanel: FunctionalComponent = () => {
                       onChange={(e) =>
                         handleSummarizationSettingChange(
                           "length",
-                          e.target.value,
+                          (e.target as HTMLSelectElement).value,
                         )
                       }
                       disabled={false}
@@ -388,7 +396,7 @@ export const SidePanel: FunctionalComponent = () => {
                       onChange={(e) =>
                         handleSummarizationSettingChange(
                           "style",
-                          e.target.value,
+                          (e.target as HTMLSelectElement).value,
                         )
                       }
                       disabled={false}
@@ -438,7 +446,7 @@ export const SidePanel: FunctionalComponent = () => {
                   <span className="error-icon">⚠️</span>{" "}
                   {extractedContent.error}
                 </p>
-                {(extractedContent as any).showRefreshButton ? (
+                {extractedContent.showRefreshButton ? (
                   <button
                     onClick={async () => {
                       const tabs = await chrome.tabs.query({
