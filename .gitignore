@@ -411,3 +411,5 @@ Thumbs.db
 # .nx/
 
 .archive/
+.gemini/
+.codex/
