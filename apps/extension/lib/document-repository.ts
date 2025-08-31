@@ -2,6 +2,18 @@
  * Document Repository for managing local storage of summarized documents
  */
 
+/**
+ * Extract domain from a URL string
+ */
+export const extractDomain = (url: string): string => {
+  if (!url) return "Unknown";
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return "Unknown";
+  }
+};
+
 export interface Document {
   id: string;
   url: string;

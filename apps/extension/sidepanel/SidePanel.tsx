@@ -3,7 +3,11 @@ import { useState, useEffect } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
 import { EnhancedSettings } from "./EnhancedSettings";
 import { SettingsService, SettingsData } from "../lib/settings-service";
-import { DocumentRepository, Document } from "../lib/document-repository";
+import {
+  DocumentRepository,
+  Document,
+  extractDomain,
+} from "../lib/document-repository";
 
 interface TabProps {
   id: string;
@@ -140,22 +144,15 @@ export const SidePanel: FunctionalComponent = () => {
       });
       const activeTab = tabs?.[0];
 
-      // Extract domain from URL
-      let domain = "";
-      if (activeTab?.url) {
-        try {
-          const url = new URL(activeTab.url);
-          domain = url.hostname;
-        } catch {}
-      }
-
       // Create document object
       const document: Document = {
         id: Date.now().toString(),
         url: activeTab?.url || extractedContent.metadata?.url || "",
         title:
           activeTab?.title || extractedContent.metadata?.title || "Untitled",
-        domain: domain,
+        domain: extractDomain(
+          activeTab?.url || extractedContent.metadata?.url || "",
+        ),
         rawText: extractedContent.text,
         summaryText: summaryText,
         metadata: {

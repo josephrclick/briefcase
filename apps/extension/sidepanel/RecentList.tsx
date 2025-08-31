@@ -3,29 +3,26 @@ import { useState, useEffect } from "preact/hooks";
 import {
   DocumentRepository,
   Document as StoredDocument,
+  extractDomain,
 } from "../lib/document-repository";
 
-interface Document {
-  id: string;
-  title: string;
+// Display-specific document type that extends stored document fields
+type DisplayDocument = Pick<
+  StoredDocument,
+  "id" | "title" | "rawText" | "summaryText" | "summary"
+> & {
   domain: string;
-  date: string;
-  summary?: {
-    keyPoints: string[];
-    tldr: string;
-  };
-  rawText?: string;
-  summaryText?: string;
-}
+  date: string; // Pre-formatted display date
+};
 
 interface RecentListProps {
-  onViewDocument: (doc: Document) => void;
+  onViewDocument: (doc: DisplayDocument) => void;
 }
 
 export const RecentList: FunctionalComponent<RecentListProps> = ({
   onViewDocument,
 }) => {
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [documents, setDocuments] = useState<DisplayDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [documentRepository] = useState(() => new DocumentRepository());
 
@@ -40,24 +37,15 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
       const storedDocs = await documentRepository.getRecentDocuments(20);
 
       // Transform stored documents to display format
-      const displayDocs: Document[] = storedDocs.map((doc) => {
-        let domain = doc.domain || "Unknown";
-        if (!doc.domain && doc.url) {
-          try {
-            domain = new URL(doc.url).hostname;
-          } catch {}
-        }
-
-        return {
-          id: doc.id,
-          title: doc.title || "Untitled",
-          domain: domain,
-          date: new Date(doc.createdAt).toLocaleDateString(),
-          summary: doc.summary,
-          rawText: doc.rawText,
-          summaryText: doc.summaryText,
-        };
-      });
+      const displayDocs: DisplayDocument[] = storedDocs.map((doc) => ({
+        id: doc.id,
+        title: doc.title || "Untitled",
+        domain: doc.domain || extractDomain(doc.url),
+        date: new Date(doc.createdAt).toLocaleDateString(),
+        summary: doc.summary,
+        rawText: doc.rawText,
+        summaryText: doc.summaryText,
+      }));
 
       setDocuments(displayDocs);
     } catch (error) {
@@ -100,9 +88,7 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
               <h3>{doc.title}</h3>
               <div className="metadata">
                 <span className="domain">{doc.domain}</span>
-                <span className="date">
-                  {new Date(doc.date).toLocaleDateString()}
-                </span>
+                <span className="date">{doc.date}</span>
               </div>
               {doc.summaryText && (
                 <div className="summary-preview">
