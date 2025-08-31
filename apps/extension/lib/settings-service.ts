@@ -76,9 +76,16 @@ export class SettingsService {
    * Validate an API key format
    */
   static validateApiKeyFormat(apiKey: string): boolean {
-    // OpenAI API keys start with 'sk-' and have at least 40 total characters
-    // Format can be: sk-[40+ chars] or sk-proj-[40+ chars]
-    return /^sk-[A-Za-z0-9-]{40,}$/.test(apiKey) && apiKey.startsWith("sk-");
+    // OpenAI API keys start with 'sk-' and should be at least 40 characters total
+    // Common formats:
+    // - sk-[48+ chars]
+    // - sk-proj-[long string with mixed case, numbers, underscores, hyphens]
+    if (!apiKey.startsWith("sk-")) return false;
+    if (apiKey.length < 40) return false;
+
+    // Allow alphanumeric, hyphens, underscores, and dots (more permissive)
+    // This matches real OpenAI key formats like sk-proj-xxx_xxx-xxx...xxx
+    return /^sk-[A-Za-z0-9_\-\.]+$/.test(apiKey);
   }
 
   /**

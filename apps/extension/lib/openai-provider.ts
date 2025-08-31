@@ -24,7 +24,14 @@ export class OpenAIProvider {
       throw new Error("API key is required");
     }
 
+    // Validate API key format - must start with sk- and be at least 40 chars
+    // Supports formats like sk-xxx, sk-proj-xxx with underscores, hyphens, dots
     if (!apiKey.startsWith("sk-") || apiKey.length < 40) {
+      throw new Error("Invalid API key format");
+    }
+
+    // Additional validation for allowed characters
+    if (!/^sk-[A-Za-z0-9_\-\.]+$/.test(apiKey)) {
       throw new Error("Invalid API key format");
     }
 

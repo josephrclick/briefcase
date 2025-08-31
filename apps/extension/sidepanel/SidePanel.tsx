@@ -91,17 +91,17 @@ export const SidePanel: FunctionalComponent = () => {
 
       // Send message to content script to extract text
       const response = await chrome.tabs.sendMessage(activeTab.id, {
-        type: "EXTRACT_TEXT",
+        action: "EXTRACT_CONTENT",
       });
 
-      if (response?.success && response.text) {
+      if (response?.type === "EXTRACT_CONTENT" && response.payload?.text) {
         setExtractedContent({
-          text: response.text,
-          charCount: response.text.length,
-          metadata: response.metadata,
+          text: response.payload.text,
+          charCount: response.payload.text.length,
+          metadata: response.payload.metadata,
         });
       } else {
-        throw new Error(response?.error || "Failed to extract text");
+        throw new Error(response?.payload?.error || "Failed to extract text");
       }
     } catch (error: any) {
       console.error("Text extraction failed:", error);

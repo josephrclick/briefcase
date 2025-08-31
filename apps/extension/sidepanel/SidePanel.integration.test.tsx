@@ -117,6 +117,15 @@ describe("SidePanel Integration Tests", () => {
   });
 
   describe("Settings Configuration Flow", () => {
+    beforeEach(() => {
+      // Mock settings with privacy banner already dismissed
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: "",
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+    });
+
     it("should allow configuring API key", async () => {
       const user = userEvent.setup();
       render(<SidePanel />);
@@ -125,8 +134,8 @@ describe("SidePanel Integration Tests", () => {
       const settingsTab = await screen.findByRole("tab", { name: /Settings/i });
       await user.click(settingsTab);
 
-      // Enter API key
-      const apiKeyInput = screen.getByLabelText("API Key");
+      // Wait for settings panel to render and enter API key
+      const apiKeyInput = await screen.findByLabelText("API Key");
       await user.type(apiKeyInput, MOCK_API_KEY);
 
       // Save settings
@@ -150,8 +159,8 @@ describe("SidePanel Integration Tests", () => {
       const settingsTab = await screen.findByRole("tab", { name: /Settings/i });
       await user.click(settingsTab);
 
-      // Enter API key
-      const apiKeyInput = screen.getByLabelText("API Key");
+      // Wait for settings panel to render and enter API key
+      const apiKeyInput = await screen.findByLabelText("API Key");
       await user.type(apiKeyInput, MOCK_API_KEY);
 
       // Test connection
@@ -196,6 +205,15 @@ describe("SidePanel Integration Tests", () => {
   });
 
   describe("Text Extraction Flow", () => {
+    beforeEach(() => {
+      // Mock settings with privacy banner already dismissed
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: "",
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+    });
+
     it("should extract text from current tab", async () => {
       // Active tab is already mocked in beforeEach
       const activeTab = createMockTab({
@@ -206,12 +224,14 @@ describe("SidePanel Integration Tests", () => {
 
       // Mock text extraction response
       (chrome.tabs.sendMessage as any).mockResolvedValue({
-        success: true,
-        text: "This is a long article about testing that needs to be summarized...",
-        metadata: {
-          title: "Test Article",
-          url: "https://example.com/article",
-          extractedAt: new Date().toISOString(),
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "This is a long article about testing that needs to be summarized. It contains multiple paragraphs of content that exceed the minimum character requirement for proper summarization.",
+          metadata: {
+            title: "Test Article",
+            url: "https://example.com/article",
+            extractedAt: new Date().toISOString(),
+          },
         },
       });
 
@@ -226,7 +246,7 @@ describe("SidePanel Integration Tests", () => {
 
       await waitFor(() => {
         expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(1, {
-          type: "EXTRACT_TEXT",
+          action: "EXTRACT_CONTENT",
         });
       });
 
@@ -274,11 +294,13 @@ describe("SidePanel Integration Tests", () => {
       setupChromeTabsMock([activeTab]);
 
       (chrome.tabs.sendMessage as any).mockResolvedValue({
-        success: true,
-        text: "A".repeat(1000), // Long enough text
-        metadata: {
-          title: "Test Article",
-          url: "https://example.com/article",
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000), // Long enough text
+          metadata: {
+            title: "Test Article",
+            url: "https://example.com/article",
+          },
         },
       });
     });
@@ -435,6 +457,15 @@ describe("SidePanel Integration Tests", () => {
   });
 
   describe("Error Handling", () => {
+    beforeEach(() => {
+      // Mock settings with privacy banner already dismissed and API key configured
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: MOCK_API_KEY,
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+    });
+
     it("should handle API errors with retry", async () => {
       const user = userEvent.setup();
 
@@ -452,8 +483,10 @@ describe("SidePanel Integration Tests", () => {
       ]);
 
       (chrome.tabs.sendMessage as any).mockResolvedValue({
-        success: true,
-        text: "A".repeat(1000),
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000),
+        },
       });
 
       // First attempt fails
@@ -510,8 +543,10 @@ describe("SidePanel Integration Tests", () => {
       ]);
 
       (chrome.tabs.sendMessage as any).mockResolvedValue({
-        success: true,
-        text: "A".repeat(1000),
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: "A".repeat(1000),
+        },
       });
 
       render(<SidePanel />);
@@ -540,6 +575,15 @@ describe("SidePanel Integration Tests", () => {
   });
 
   describe("Tab Navigation", () => {
+    beforeEach(() => {
+      // Mock settings with privacy banner already dismissed
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: "",
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+    });
+
     it("should switch between Summarize and Settings tabs", async () => {
       const user = userEvent.setup();
       render(<SidePanel />);
@@ -556,7 +600,9 @@ describe("SidePanel Integration Tests", () => {
       expect(
         screen.getByRole("tabpanel", { name: /Settings/i }),
       ).toBeInTheDocument();
-      expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+
+      const apiKeyInput = await screen.findByLabelText("API Key");
+      expect(apiKeyInput).toBeInTheDocument();
 
       // Switch back to Summarize
       const summarizeTab = screen.getByRole("tab", { name: /Summarize/i });
@@ -569,6 +615,15 @@ describe("SidePanel Integration Tests", () => {
   });
 
   describe("Performance", () => {
+    beforeEach(() => {
+      // Mock settings with privacy banner already dismissed and API key configured
+      (SettingsService.loadSettings as any).mockResolvedValue({
+        openaiApiKey: MOCK_API_KEY,
+        summarization: { length: "brief", style: "bullets" },
+        privacyBannerDismissed: true,
+      });
+    });
+
     it("should handle large text extraction efficiently", async () => {
       const largeText = "A".repeat(12000); // Max supported size
 
@@ -577,8 +632,10 @@ describe("SidePanel Integration Tests", () => {
       ]);
 
       (chrome.tabs.sendMessage as any).mockResolvedValue({
-        success: true,
-        text: largeText,
+        type: "EXTRACT_CONTENT",
+        payload: {
+          text: largeText,
+        },
       });
 
       render(<SidePanel />);

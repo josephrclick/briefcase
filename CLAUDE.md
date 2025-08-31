@@ -44,6 +44,9 @@ Briefcase is a Chrome side-panel extension that extracts and summarizes web page
 
 ## Development Commands
 
+### While coding
+**Remember to use rg in place of grep at all times for better performance**
+
 ### Build & Development
 
 ```bash
