@@ -34,6 +34,9 @@ interface ExtractedContent {
     title?: string;
     url?: string;
     extractedAt?: string;
+    author?: string;
+    publishedDate?: string;
+    wordCount?: number;
   };
   error?: string;
 }

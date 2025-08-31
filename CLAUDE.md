@@ -11,7 +11,7 @@ Briefcase is a Chrome side-panel extension that extracts and summarizes web page
 ### Core Components
 
 1. **Chrome Extension (Manifest V3)**
-   - Side Panel UI (React + TypeScript)
+   - Side Panel UI (React/Preact + TypeScript)
    - Content Script for text extraction
    - Background Service Worker for messaging
    - Local storage via `chrome.storage.local`
@@ -35,17 +35,47 @@ Briefcase is a Chrome side-panel extension that extracts and summarizes web page
    - `settings`: API key, model selection, max tokens preferences
    - No cloud persistence - all data in `chrome.storage.local`
 
-5. **Component Structure**
-   - `SidePanel.tsx`: Main orchestrator component
-   - `EnhancedSettings.tsx`: Settings management with API key validation
-   - `StreamingDisplay.tsx`: Real-time token streaming UI
-   - `PrivacyBanner.tsx`: First-use privacy disclosure
-   - `openai-provider.ts`: OpenAI API client wrapper
+## Key Data Structures
+
+### ExtractedContent Interface
+
+```typescript
+interface ExtractedContent {
+  text: string;
+  charCount: number;
+  metadata?: {
+    title?: string;
+    url?: string;
+    extractedAt?: string;
+    author?: string;
+    publishedDate?: string;
+    wordCount?: number;
+  };
+  error?: string;
+}
+```
+
+### Document Interface
+
+```typescript
+interface Document {
+  id: string;
+  url: string;
+  title: string;
+  domain: string;
+  rawText: string;
+  summaryText?: string;
+  metadata?: {
+    author?: string;
+    publishedDate?: string;
+    wordCount?: number;
+  };
+  createdAt: string;
+  summarizedAt?: string;
+}
+```
 
 ## Development Commands
-
-### While coding
-**Remember to use rg in place of grep at all times for better performance**
 
 ### Build & Development
 
@@ -61,6 +91,7 @@ npm run dev          # Start development with hot reload
 npm run test         # Run test suite
 npm run lint         # Run linter
 npm run typecheck    # TypeScript type checking
+npm run test:coverage # Run tests with coverage report
 ```
 
 ### Extension Installation
@@ -75,11 +106,21 @@ npm run typecheck    # TypeScript type checking
 - **Manifest V3**: Required for Chrome side panel support
 - **Permissions**: Minimal set - `activeTab`, `scripting`, `storage` only
 - **Build Tool**: Vite + CRXJS for extension bundling
-- **UI Framework**: React for side panel (TypeScript + hooks)
+- **UI Framework**: Preact for side panel (smaller bundle size)
 - **Text Extraction**: Mozilla Readability with custom fallback
 - **Input Cap**: ~12k characters for v1 (no chunking)
 - **Streaming**: ReadableStream API for real-time OpenAI responses
-- **Testing**: Vitest with React Testing Library (~95% coverage)
+- **Testing**: Vitest with React Testing Library
+
+## Common Pitfalls to Avoid
+
+- **Chrome API Destructuring**: Use safe array access instead of destructuring
+  ```typescript
+  // ❌ Wrong: const [activeTab] = await chrome.tabs.query({...})
+  // ✅ Right: const tabs = await chrome.tabs.query({...}); const activeTab = tabs?.[0];
+  ```
+- **OpenAI Validation**: Use `models.list()` not `chat.completions.create()` for API key validation
+- **Type Safety**: Ensure metadata properties are optional to handle partial data extraction
 
 ## Privacy & Security Constraints
 
@@ -96,17 +137,6 @@ npm run typecheck    # TypeScript type checking
 - Retry capability for transient failures
 - 3-second timeout for DOM stability detection
 
-## Common Pitfalls to Avoid
-
-- **Chrome API Destructuring**: Use safe array access instead of destructuring
-  ```typescript
-  // ❌ Wrong: const [activeTab] = await chrome.tabs.query({...})
-  // ✅ Right: const tabs = await chrome.tabs.query({...}); const activeTab = tabs?.[0];
-  ```
-- **OpenAI Validation**: Use `models.list()` not `chat.completions.create()` for API key validation
-- **Test Mocking**: Chrome APIs need proper mocking in test environment
-- **Background Script**: Must initialize message handlers on startup
-
 ## Testing Approach
 
 - Integration tests in `SidePanel.integration.test.tsx` cover end-to-end flows
@@ -114,11 +144,25 @@ npm run typecheck    # TypeScript type checking
 - Mock Chrome APIs using vi.mock for storage, tabs, runtime
 - Test streaming responses with mock ReadableStream implementations
 
-## Future Migration Path
+## Project Structure
 
-Version 2 will migrate from `chrome.storage.local` to SQLite on OPFS for full-text search. The migration should:
+```
+apps/extension/
+├── sidepanel/          # Side panel UI components
+│   ├── SidePanel.tsx   # Main orchestrator component
+│   ├── EnhancedSettings.tsx
+│   ├── StreamingSummarizer.tsx
+│   └── DocumentViewer.tsx
+├── background/         # Service worker
+├── content/           # Content scripts
+├── lib/              # Shared utilities
+│   ├── document-repository.ts
+│   └── openai-provider.ts
+└── dist/             # Build output (gitignored)
+```
 
-1. Read all `docs:index` and `doc:*` entries
-2. Bulk insert into SQLite
-3. Set `migratedV2=true` flag
-4. Optionally clear old storage keys
+## Future Considerations
+
+- Version 2 may migrate from `chrome.storage.local` to SQLite on OPFS for full-text search
+- Potential chunking support for documents >12k characters
+- Enhanced metadata extraction capabilities
