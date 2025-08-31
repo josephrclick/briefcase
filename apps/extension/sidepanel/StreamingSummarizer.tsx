@@ -10,6 +10,7 @@ import { OpenAIProvider } from "../lib/openai-provider";
 interface StreamingSummarizerProps {
   extractedText: string;
   charCount: number;
+  autoStart?: boolean;
   onSummarizationComplete?: (summaryText: string) => void;
 }
 
@@ -22,7 +23,12 @@ interface SummaryState {
 
 export const StreamingSummarizer: FunctionalComponent<
   StreamingSummarizerProps
-> = ({ extractedText, charCount, onSummarizationComplete }) => {
+> = ({
+  extractedText,
+  charCount,
+  autoStart = false,
+  onSummarizationComplete,
+}) => {
   const [settings, setSettings] = useState<SummarizationSettings>({
     length: "brief",
     style: "bullets",
@@ -42,9 +48,36 @@ export const StreamingSummarizer: FunctionalComponent<
     null,
   );
 
+  const MIN_TEXT_LENGTH = 100;
+  const MAX_TEXT_LENGTH = 12000;
+
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // Auto-start summarization if requested and text is valid
+  useEffect(() => {
+    // Check if text is valid for summarization
+    const isTextValid =
+      extractedText &&
+      charCount >= MIN_TEXT_LENGTH &&
+      charCount <= MAX_TEXT_LENGTH;
+
+    if (
+      autoStart &&
+      isTextValid &&
+      provider &&
+      !summary.isStreaming &&
+      !summary.isComplete &&
+      !isLoading
+    ) {
+      // Trigger summarization asynchronously
+      setTimeout(() => {
+        handleSummarize();
+      }, 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart, provider, charCount]);
 
   const loadSettings = async () => {
     try {
@@ -62,9 +95,6 @@ export const StreamingSummarizer: FunctionalComponent<
     setSettings(newSettings);
     await SettingsService.saveSummarizationSettings(newSettings);
   };
-
-  const MIN_TEXT_LENGTH = 100;
-  const MAX_TEXT_LENGTH = 12000;
 
   const textValidation = () => {
     if (!extractedText || charCount === 0) {
@@ -86,7 +116,11 @@ export const StreamingSummarizer: FunctionalComponent<
   };
 
   const validation = textValidation();
-  const canSummarize = validation.valid && !summary.isStreaming && !isLoading;
+  const canSummarize =
+    validation.valid &&
+    !summary.isStreaming &&
+    !isLoading &&
+    !summary.isComplete;
 
   const handleSummarize = async () => {
     if (!provider) {

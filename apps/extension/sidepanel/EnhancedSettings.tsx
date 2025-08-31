@@ -26,6 +26,8 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     text: string;
   } | null>(null);
   const [validationError, setValidationError] = useState("");
+  const [apiKeyValidated, setApiKeyValidated] = useState(false);
+  const [configCollapsed, setConfigCollapsed] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -35,6 +37,11 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     try {
       const loadedSettings = await SettingsService.loadSettings();
       setSettings(loadedSettings);
+      // Set collapsed state based on whether API key exists and collapse preference
+      setConfigCollapsed(
+        !!loadedSettings.openaiApiKey &&
+          (loadedSettings.openaiConfigCollapsed ?? false),
+      );
     } catch (error) {
       setMessage({ type: "error", text: "Failed to load settings" });
     } finally {
@@ -46,6 +53,7 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     setSettings({ ...settings, openaiApiKey: apiKey });
     setValidationError("");
     setMessage(null);
+    setApiKeyValidated(false); // Reset validation state when API key changes
   };
 
   const handleSummarizationChange = (
@@ -55,6 +63,31 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
       ...settings,
       summarization: { ...settings.summarization, ...updates },
     });
+  };
+
+  const handleSaveApiKey = async () => {
+    setValidationError("");
+    setMessage(null);
+
+    // Save the API key since it's already validated
+    setIsSaving(true);
+    try {
+      await SettingsService.saveSettings({
+        ...settings,
+        openaiConfigCollapsed: true, // Automatically collapse after save
+      });
+      setMessage({ type: "success", text: "Settings saved successfully" });
+      setApiKeyValidated(false); // Reset validation state after save
+      setConfigCollapsed(true); // Collapse the section after successful save
+      // Notify parent component that settings have been updated
+      if (onSettingsUpdate) {
+        onSettingsUpdate();
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Failed to save settings" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -103,6 +136,7 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
           type: "success",
           text: "Connection successful! Your API key is valid.",
         });
+        setApiKeyValidated(true); // Set validation flag on success
       } else {
         setMessage({
           type: "error",
@@ -136,6 +170,23 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     await SettingsService.saveSettings({ privacyBannerDismissed: true });
   };
 
+  const toggleConfigCollapse = async () => {
+    const newCollapsedState = !configCollapsed;
+    setConfigCollapsed(newCollapsedState);
+    // Persist the collapse preference
+    await SettingsService.saveSettings({
+      openaiConfigCollapsed: newCollapsedState,
+    });
+  };
+
+  const handleChangeApiKey = () => {
+    setConfigCollapsed(false);
+    // Save the expanded state
+    SettingsService.saveSettings({
+      openaiConfigCollapsed: false,
+    });
+  };
+
   if (isLoading) {
     return <div className="settings-loading">Loading settings...</div>;
   }
@@ -159,54 +210,83 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
       )}
 
       <div className="settings-section">
-        <h3>OpenAI Configuration</h3>
-
-        <div className="form-group">
-          <label htmlFor="api-key">API Key</label>
-          <div className="input-group">
-            <input
-              id="api-key"
-              type={showApiKey ? "text" : "password"}
-              value={settings.openaiApiKey}
-              onChange={(e) =>
-                handleApiKeyChange((e.target as HTMLInputElement).value)
-              }
-              placeholder="sk-..."
-              className={validationError ? "error" : ""}
-            />
+        <div className="section-header">
+          <h3>OpenAI Configuration</h3>
+          {settings.openaiApiKey && (
             <button
-              type="button"
-              onClick={() => setShowApiKey(!showApiKey)}
-              aria-label={showApiKey ? "Hide API Key" : "Show API Key"}
-              className="toggle-visibility"
+              className="collapse-toggle"
+              onClick={toggleConfigCollapse}
+              aria-label={configCollapsed ? "Expand" : "Collapse"}
             >
-              {showApiKey ? "🙈" : "👁️"}
+              {configCollapsed ? "▶" : "▼"}
+            </button>
+          )}
+        </div>
+
+        {configCollapsed && settings.openaiApiKey ? (
+          <div className="collapsed-content">
+            <button onClick={handleChangeApiKey} className="secondary">
+              Change API Key
             </button>
           </div>
-          {validationError && (
-            <div className="error-message">{validationError}</div>
-          )}
-          <div className="help-text">
-            Get your API key from{" "}
-            <a
-              href="https://platform.openai.com/api-keys"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              OpenAI Platform
-            </a>
-          </div>
-        </div>
+        ) : (
+          <>
+            <div className="form-group">
+              <label htmlFor="api-key">API Key</label>
+              <div className="input-group">
+                <input
+                  id="api-key"
+                  type={showApiKey ? "text" : "password"}
+                  value={settings.openaiApiKey}
+                  onInput={(e) =>
+                    handleApiKeyChange((e.target as HTMLInputElement).value)
+                  }
+                  placeholder="sk-..."
+                  className={validationError ? "error" : ""}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  aria-label={showApiKey ? "Hide API Key" : "Show API Key"}
+                  className="toggle-visibility"
+                >
+                  {showApiKey ? "🙈" : "👁️"}
+                </button>
+              </div>
+              {validationError && (
+                <div className="error-message">{validationError}</div>
+              )}
+              <div className="help-text">
+                Get your API key from{" "}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  OpenAI Platform
+                </a>
+              </div>
+            </div>
 
-        <div className="button-group">
-          <button
-            onClick={handleTestConnection}
-            disabled={!settings.openaiApiKey || isTesting}
-            className="secondary"
-          >
-            {isTesting ? "Testing..." : "Test Connection"}
-          </button>
-        </div>
+            <div className="button-group">
+              <button
+                onClick={
+                  apiKeyValidated ? handleSaveApiKey : handleTestConnection
+                }
+                disabled={!settings.openaiApiKey || isTesting || isSaving}
+                className={apiKeyValidated ? "primary" : "secondary"}
+              >
+                {isTesting
+                  ? "Testing..."
+                  : isSaving
+                    ? "Saving..."
+                    : apiKeyValidated
+                      ? "Save Key"
+                      : "Test Connection"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="settings-section">

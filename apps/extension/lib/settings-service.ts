@@ -5,10 +5,14 @@ export interface SummarizationSettings {
   style: "bullets" | "plain";
 }
 
+export type ThemePreference = "light" | "dark" | "system";
+
 export interface SettingsData {
   openaiApiKey: string;
   summarization: SummarizationSettings;
   privacyBannerDismissed: boolean;
+  openaiConfigCollapsed?: boolean;
+  theme?: ThemePreference;
 }
 
 export const DEFAULT_SETTINGS: SettingsData = {
@@ -18,6 +22,8 @@ export const DEFAULT_SETTINGS: SettingsData = {
     style: "bullets",
   },
   privacyBannerDismissed: false,
+  openaiConfigCollapsed: false,
+  theme: "system",
 };
 
 export class SettingsService {

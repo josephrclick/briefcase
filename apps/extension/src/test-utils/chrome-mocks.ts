@@ -27,6 +27,21 @@ interface MockTab {
 
 type StorageData = Record<string, any>;
 
+// Mock window.matchMedia for dark mode tests
+export const setupMatchMediaMock = (prefersDark = false) => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: prefersDark && query === "(prefers-color-scheme: dark)",
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+};
+
 export const createMockTab = (overrides: Partial<MockTab> = {}): MockTab =>
   ({
     ...{
@@ -118,6 +133,60 @@ export const setupChromeStorageMock = (initialData: StorageData = {}) => {
       storage = newStorage;
     },
   };
+};
+
+export const setupReadableStreamMock = () => {
+  // Always override ReadableStream in test environment
+  global.ReadableStream = class ReadableStream {
+    private controller: any;
+    private chunks: any[] = [];
+    private closed = false;
+
+    constructor(source?: any) {
+      if (source?.start) {
+        this.controller = {
+          enqueue: (chunk: any) => {
+            if (!this.closed) {
+              this.chunks.push(chunk);
+            }
+          },
+          close: () => {
+            this.closed = true;
+          },
+          error: (err: any) => {
+            this.closed = true;
+            throw err;
+          },
+        };
+        // Execute start function
+        Promise.resolve(source.start(this.controller));
+      }
+    }
+
+    getReader() {
+      let index = 0;
+      const chunks = this.chunks;
+      const closed = this.closed;
+
+      return {
+        read: async () => {
+          if (index < chunks.length) {
+            return { done: false, value: chunks[index++] };
+          }
+          // Wait a bit for more chunks if not closed
+          if (!closed) {
+            await new Promise((r) => setTimeout(r, 10));
+            if (index < chunks.length) {
+              return { done: false, value: chunks[index++] };
+            }
+          }
+          return { done: true, value: undefined };
+        },
+        cancel: vi.fn().mockResolvedValue(undefined),
+        releaseLock: vi.fn(),
+      };
+    }
+  } as any;
 };
 
 export const setupAbortControllerMock = () => {
