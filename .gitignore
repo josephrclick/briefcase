@@ -409,3 +409,5 @@ Thumbs.db
 # --- Monorepo niceties (uncomment if you add these tools) ---
 # .turbo/
 # .nx/
+
+.archive/
