@@ -1,4 +1,5 @@
 import { render } from "preact";
-import { App } from "./App";
+import { SidePanel } from "./SidePanel";
+import "./styles.css";
 
-render(<App />, document.getElementById("app")!);
+render(<SidePanel />, document.getElementById("app")!);

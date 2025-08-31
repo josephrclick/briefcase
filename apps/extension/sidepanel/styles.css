@@ -1,0 +1,414 @@
+/* Side Panel Styles */
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #333;
+  background: #f5f5f5;
+}
+
+/* Privacy Banner */
+.privacy-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
+  margin: 0.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.privacy-banner h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.privacy-banner p {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.privacy-banner .dismiss-button {
+  background: white;
+  color: #667eea;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  background: white;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: #333;
+  background: #f9f9f9;
+}
+
+.tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+/* Tab Content */
+.tab-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+/* Extraction Status */
+.extracting-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.extraction-error {
+  background: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.error-message {
+  color: #c00;
+  margin: 0 0 1rem 0;
+}
+
+/* Streaming Summarizer Styles */
+.streaming-summarizer {
+  padding: 1rem;
+}
+
+.extraction-status {
+  margin-bottom: 1rem;
+}
+
+.status-success {
+  color: #0a0;
+  font-size: 0.9rem;
+}
+
+.status-error {
+  color: #c00;
+  font-size: 0.9rem;
+}
+
+/* Controls */
+.controls {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary {
+  background: #667eea;
+  color: white;
+}
+
+.primary:hover:not(:disabled) {
+  background: #5a67d8;
+}
+
+.secondary {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.secondary:hover:not(:disabled) {
+  background: #d0d0d0;
+}
+
+.retry-button {
+  background: #fff;
+  color: #667eea;
+  border: 1px solid #667eea;
+  margin-left: 0.5rem;
+}
+
+/* Summary Container */
+.summary-container {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.summary-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.summary-section {
+  margin-bottom: 1.5rem;
+}
+
+.summary-section h3 {
+  color: #667eea;
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.summary-section ul {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.summary-section li {
+  margin-bottom: 0.5rem;
+}
+
+/* Loading & Progress */
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #ddd;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.progress-indicator {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #667eea;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 2px;
+}
+
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background: #667eea;
+  border-radius: 50%;
+  animation: bounce 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Status Messages */
+.completion-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #0a0;
+}
+
+.check-icon {
+  font-size: 1.2rem;
+}
+
+.copy-button {
+  margin-left: auto;
+  background: #f0f0f0;
+  color: #333;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+/* Settings Panel */
+.enhanced-settings {
+  padding: 1rem;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-section h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.api-key-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.api-key-input-group input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.toggle-visibility {
+  background: #f0f0f0;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+/* Messages */
+.message {
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.message.info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* Delete Confirmation */
+.delete-confirmation {
+  background: #fff;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.delete-confirmation h4 {
+  color: #dc3545;
+  margin: 0 0 0.5rem 0;
+}
+
+.delete-confirmation .button-group {
+  margin-top: 1rem;
+}
+
+/* Setup Prompt */
+.setup-prompt {
+  background: #f0f8ff;
+  border: 1px solid #b0d4ff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.setup-prompt p {
+  margin: 0 0 1rem 0;
+  color: #0066cc;
+}
+
+.settings-link {
+  text-decoration: none;
+}
