@@ -10,6 +10,7 @@ import { OpenAIProvider } from "../lib/openai-provider";
 interface StreamingSummarizerProps {
   extractedText: string;
   charCount: number;
+  onSummarizationComplete?: (summaryText: string) => void;
 }
 
 interface SummaryState {
@@ -21,7 +22,7 @@ interface SummaryState {
 
 export const StreamingSummarizer: FunctionalComponent<
   StreamingSummarizerProps
-> = ({ extractedText, charCount }) => {
+> = ({ extractedText, charCount, onSummarizationComplete }) => {
   const [settings, setSettings] = useState<SummarizationSettings>({
     length: "brief",
     style: "bullets",
@@ -127,6 +128,10 @@ export const StreamingSummarizer: FunctionalComponent<
             isStreaming: false,
             isComplete: true,
           }));
+          // Call the completion callback with the final summary
+          if (onSummarizationComplete && accumulatedContent) {
+            onSummarizationComplete(accumulatedContent);
+          }
           break;
         }
 
