@@ -175,6 +175,169 @@ describe("EnhancedSettings Component", () => {
       });
     });
 
+    it("should transform Test Connection button to Save Key after successful validation", async () => {
+      const user = userEvent.setup();
+      (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+      });
+
+      const input = screen.getByLabelText("API Key");
+      await user.type(input, "sk-test123456789abcdefghijklmnop");
+
+      // Initially should show Test Connection
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      expect(testButton).toBeInTheDocument();
+
+      // Click to test
+      await user.click(testButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Connection successful/i)).toBeInTheDocument();
+      });
+
+      // Button should now show Save Key
+      const saveKeyButton = screen.getByRole("button", {
+        name: /Save Key/i,
+      });
+      expect(saveKeyButton).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Test Connection/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should save API key when Save Key button is clicked after validation", async () => {
+      const user = userEvent.setup();
+      (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+      });
+
+      const input = screen.getByLabelText("API Key");
+      await user.type(input, "sk-test123456789abcdefghijklmnop");
+
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      await user.click(testButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Connection successful/i)).toBeInTheDocument();
+      });
+
+      // Click Save Key button
+      const saveKeyButton = screen.getByRole("button", {
+        name: /Save Key/i,
+      });
+      await user.click(saveKeyButton);
+
+      await waitFor(() => {
+        expect(SettingsService.saveSettings).toHaveBeenCalledWith(
+          expect.objectContaining({
+            openaiApiKey: "sk-test123456789abcdefghijklmnop",
+            openaiConfigCollapsed: true,
+          }),
+        );
+        expect(
+          screen.getByText(/Settings saved successfully/i),
+        ).toBeInTheDocument();
+      });
+
+      // After save, the section should be collapsed and show Change API Key button
+      expect(
+        screen.getByRole("button", { name: /Change API Key/i }),
+      ).toBeInTheDocument();
+      // Test Connection button should not be visible when collapsed
+      expect(
+        screen.queryByRole("button", { name: /Test Connection/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Save Key/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should reset validation state when API key input changes", async () => {
+      const user = userEvent.setup();
+      (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+      });
+
+      const input = screen.getByLabelText("API Key");
+      await user.type(input, "sk-test123456789abcdefghijklmnop");
+
+      // Test connection
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      await user.click(testButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Save Key/i }),
+        ).toBeInTheDocument();
+      });
+
+      // Clear the input and type a new value to trigger onChange
+      await user.clear(input);
+      await user.type(input, "sk-newkey123456789abcdefghijklmnop");
+
+      // Button should reset to Test Connection
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Test Connection/i }),
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByRole("button", { name: /Save Key/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should not show Save Key button after failed validation", async () => {
+      const user = userEvent.setup();
+      (SettingsService.testApiKey as any).mockResolvedValue({
+        success: false,
+        error: "Invalid API key",
+      });
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+      });
+
+      const input = screen.getByLabelText("API Key");
+      await user.type(input, "sk-invalid123");
+
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      await user.click(testButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Invalid API key/i)).toBeInTheDocument();
+      });
+
+      // Should still show Test Connection, not Save Key
+      expect(
+        screen.getByRole("button", { name: /Test Connection/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /Save Key/i }),
+      ).not.toBeInTheDocument();
+    });
+
     it("should show error for failed connection test", async () => {
       const user = userEvent.setup();
       (SettingsService.testApiKey as any).mockResolvedValue({
@@ -453,7 +616,11 @@ describe("EnhancedSettings Component", () => {
       const saveButton = screen.getByRole("button", { name: /Save Settings/i });
       await user.click(saveButton);
 
-      expect(screen.getByText(/Saving.../i)).toBeInTheDocument();
+      const savingButtons = screen.getAllByText(/Saving.../i);
+      expect(savingButtons).toHaveLength(2);
+      expect(
+        savingButtons.some((button) => button.className.includes("primary")),
+      ).toBe(true);
     });
 
     it("should show testing state during connection test", async () => {
@@ -541,6 +708,186 @@ describe("EnhancedSettings Component", () => {
         expect(
           screen.getByText(/Failed to test connection/i),
         ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("Collapsible OpenAI Configuration", () => {
+    it("should collapse OpenAI configuration when API key is configured", async () => {
+      const settingsWithKey = {
+        ...mockSettings,
+        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiConfigCollapsed: true,
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("OpenAI Configuration")).toBeInTheDocument();
+      });
+
+      // API key input should not be visible when collapsed
+      expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
+
+      // Should show "Change API Key" button when collapsed
+      expect(
+        screen.getByRole("button", { name: /Change API Key/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should expand OpenAI configuration when Change API Key is clicked", async () => {
+      const settingsWithKey = {
+        ...mockSettings,
+        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiConfigCollapsed: true,
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
+
+      const user = userEvent.setup();
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Change API Key/i }),
+        ).toBeInTheDocument();
+      });
+
+      const changeKeyButton = screen.getByRole("button", {
+        name: /Change API Key/i,
+      });
+      await user.click(changeKeyButton);
+
+      // API key input should now be visible
+      expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+
+      // Change API Key button should not be visible when expanded
+      expect(
+        screen.queryByRole("button", { name: /Change API Key/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show expanded configuration by default for new users without API key", async () => {
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("OpenAI Configuration")).toBeInTheDocument();
+      });
+
+      // API key input should be visible for new users
+      expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+
+      // Should not show "Change API Key" button when expanded
+      expect(
+        screen.queryByRole("button", { name: /Change API Key/i }),
+      ).not.toBeInTheDocument();
+    });
+
+    it("should persist collapse state when toggling", async () => {
+      const settingsWithKey = {
+        ...mockSettings,
+        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiConfigCollapsed: false,
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
+
+      const user = userEvent.setup();
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("OpenAI Configuration")).toBeInTheDocument();
+      });
+
+      // Initially expanded
+      expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+
+      // Find and click collapse button (assuming it exists in the section header)
+      const collapseButton = screen.getByRole("button", { name: /Collapse/i });
+      await user.click(collapseButton);
+
+      // Should save the collapsed state
+      expect(SettingsService.saveSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          openaiConfigCollapsed: true,
+        }),
+      );
+    });
+
+    it("should show collapse/expand icon in section header", async () => {
+      const settingsWithKey = {
+        ...mockSettings,
+        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByText("OpenAI Configuration")).toBeInTheDocument();
+      });
+
+      // Should have a button to toggle collapse state
+      const toggleButton = screen.getByRole("button", {
+        name: /Collapse|Expand/i,
+      });
+      expect(toggleButton).toBeInTheDocument();
+    });
+
+    it("should maintain other sections visible when OpenAI config is collapsed", async () => {
+      const settingsWithKey = {
+        ...mockSettings,
+        openaiApiKey: "sk-test123456789abcdefghijklmnop",
+        openaiConfigCollapsed: true,
+      };
+      (SettingsService.loadSettings as any).mockResolvedValue(settingsWithKey);
+
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Summarization Preferences"),
+        ).toBeInTheDocument();
+      });
+
+      // Other sections should remain visible
+      expect(screen.getByLabelText("Summary Length")).toBeInTheDocument();
+      expect(screen.getByLabelText("Summary Style")).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Save Settings/i }),
+      ).toBeInTheDocument();
+    });
+
+    it("should automatically collapse after successful API key save", async () => {
+      const user = userEvent.setup();
+      render(<EnhancedSettings />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText("API Key")).toBeInTheDocument();
+      });
+
+      const input = screen.getByLabelText("API Key");
+      await user.type(input, "sk-test123456789abcdefghijklmnop");
+
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/i,
+      });
+      await user.click(testButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole("button", { name: /Save Key/i }),
+        ).toBeInTheDocument();
+      });
+
+      const saveKeyButton = screen.getByRole("button", { name: /Save Key/i });
+      await user.click(saveKeyButton);
+
+      await waitFor(() => {
+        // After save, should automatically collapse and show Change API Key button
+        expect(
+          screen.getByRole("button", { name: /Change API Key/i }),
+        ).toBeInTheDocument();
+        expect(screen.queryByLabelText("API Key")).not.toBeInTheDocument();
       });
     });
   });

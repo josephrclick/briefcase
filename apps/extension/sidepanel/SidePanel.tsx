@@ -6,6 +6,7 @@ import {
   SettingsService,
   SettingsData,
   SummarizationSettings,
+  ThemePreference,
 } from "../lib/settings-service";
 import {
   DocumentRepository,
@@ -66,6 +67,10 @@ export const SidePanel: FunctionalComponent = () => {
   const [documentRepository] = useState(() => new DocumentRepository());
   const [uiState, setUiState] = useState<UIState>("idle");
   const [currentTabInfo, setCurrentTabInfo] = useState<TabInfo | null>(null);
+  const [autoStartSummarization, setAutoStartSummarization] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
+  const [themePreference, setThemePreference] =
+    useState<ThemePreference>("system");
   const extractingRef = useRef(false);
 
   useEffect(() => {
@@ -78,6 +83,7 @@ export const SidePanel: FunctionalComponent = () => {
       setUiState("idle");
       setExtractedContent({ text: "", charCount: 0 });
       setIsExtracting(false);
+      setAutoStartSummarization(false);
       extractingRef.current = false;
 
       // Load new tab info
@@ -91,6 +97,47 @@ export const SidePanel: FunctionalComponent = () => {
       chrome.tabs.onActivated.removeListener(handleTabChange);
     };
   }, []);
+
+  // Apply theme when it changes
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", currentTheme);
+  }, [currentTheme]);
+
+  // Detect and apply theme based on preference
+  useEffect(() => {
+    if (themePreference === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      setCurrentTheme(mediaQuery.matches ? "dark" : "light");
+
+      // Set up listener for system theme changes
+      const handleThemeChange = (e: MediaQueryListEvent) => {
+        if (themePreference === "system") {
+          setCurrentTheme(e.matches ? "dark" : "light");
+        }
+      };
+
+      mediaQuery.addEventListener("change", handleThemeChange);
+      return () => mediaQuery.removeEventListener("change", handleThemeChange);
+    } else {
+      setCurrentTheme(themePreference);
+    }
+  }, [themePreference]);
+
+  const toggleTheme = async () => {
+    let newPreference: ThemePreference;
+
+    // Cycle through: light -> dark -> system
+    if (themePreference === "light") {
+      newPreference = "dark";
+    } else if (themePreference === "dark") {
+      newPreference = "system";
+    } else {
+      newPreference = "light";
+    }
+
+    setThemePreference(newPreference);
+    await SettingsService.saveSettings({ theme: newPreference });
+  };
 
   const loadCurrentTabInfo = async () => {
     try {
@@ -121,6 +168,7 @@ export const SidePanel: FunctionalComponent = () => {
       const loadedSettings = await SettingsService.loadSettings();
       setSettings(loadedSettings);
       setShowPrivacyBanner(!loadedSettings.privacyBannerDismissed);
+      setThemePreference(loadedSettings.theme || "system");
     } catch (error) {
       console.error("Failed to load settings:", error);
       // Use default settings
@@ -130,6 +178,7 @@ export const SidePanel: FunctionalComponent = () => {
         privacyBannerDismissed: false,
       });
       setShowPrivacyBanner(true);
+      setThemePreference("system");
     }
   };
 
@@ -191,6 +240,8 @@ export const SidePanel: FunctionalComponent = () => {
           metadata: response.payload.metadata,
         });
         setUiState("extracted");
+        // Set flag to auto-start summarization after successful extraction
+        setAutoStartSummarization(true);
       } else {
         throw new Error(response?.payload?.error || "Failed to extract text");
       }
@@ -247,6 +298,7 @@ export const SidePanel: FunctionalComponent = () => {
   const handleRefresh = () => {
     setUiState("idle");
     setExtractedContent({ text: "", charCount: 0 });
+    setAutoStartSummarization(false);
     loadCurrentTabInfo();
   };
 
@@ -326,6 +378,17 @@ export const SidePanel: FunctionalComponent = () => {
 
   return (
     <div className="side-panel">
+      <div className="panel-header">
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle"
+          aria-label="Toggle theme"
+          title={`Current: ${themePreference} (${currentTheme} mode)`}
+        >
+          {currentTheme === "dark" ? "☀️" : "🌙"}
+        </button>
+      </div>
+
       {showPrivacyBanner && (
         <div className="privacy-banner">
           <h3>🔒 Privacy First</h3>
@@ -481,6 +544,7 @@ export const SidePanel: FunctionalComponent = () => {
                 <StreamingSummarizer
                   extractedText={extractedContent.text}
                   charCount={extractedContent.charCount}
+                  autoStart={autoStartSummarization}
                   onSummarizationComplete={handleSummarizationComplete}
                 />
                 <button

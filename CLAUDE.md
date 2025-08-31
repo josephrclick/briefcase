@@ -32,7 +32,7 @@ Briefcase is a Chrome side-panel extension that extracts and summarizes web page
 4. **Storage Model**
    - `docs:index`: Array of document IDs (newest first, FIFO cap at 200)
    - `doc:<id>`: Document objects with rawText, summaryText, metadata
-   - `settings`: API key, model selection, max tokens preferences
+   - `settings`: API key, model selection, theme preference, collapse states
    - No cloud persistence - all data in `chrome.storage.local`
 
 ## Key Data Structures
@@ -94,6 +94,8 @@ npm run typecheck    # TypeScript type checking
 npm run test:coverage # Run tests with coverage report
 ```
 
+**Important**: Always run lint and typecheck after implementing features to ensure code quality.
+
 ### Extension Installation
 
 1. Build: `npm run build`
@@ -121,6 +123,8 @@ npm run test:coverage # Run tests with coverage report
   ```
 - **OpenAI Validation**: Use `models.list()` not `chat.completions.create()` for API key validation
 - **Type Safety**: Ensure metadata properties are optional to handle partial data extraction
+- **Preact Events**: Use `onInput` instead of `onChange` for input elements in Preact components
+- **ReadableStream Testing**: Always mock ReadableStream properly in tests using `setupReadableStreamMock()` from test-utils
 
 ## Privacy & Security Constraints
 
@@ -143,6 +147,9 @@ npm run test:coverage # Run tests with coverage report
 - Unit tests for individual components and utilities
 - Mock Chrome APIs using vi.mock for storage, tabs, runtime
 - Test streaming responses with mock ReadableStream implementations
+- Follow TDD: Write tests first, then implement functionality
+- Use `setupReadableStreamMock()` from `src/test-utils/chrome-mocks.ts` for streaming tests
+- Mock all SettingsService methods including `testApiKey` returning `{ success: true/false }`
 
 ## Project Structure
 
@@ -150,19 +157,71 @@ npm run test:coverage # Run tests with coverage report
 apps/extension/
 ├── sidepanel/          # Side panel UI components
 │   ├── SidePanel.tsx   # Main orchestrator component
-│   ├── EnhancedSettings.tsx
-│   ├── StreamingSummarizer.tsx
+│   ├── EnhancedSettings.tsx  # Settings with API key validation flow
+│   ├── StreamingSummarizer.tsx  # Supports autoStart prop for auto-summarization
 │   └── DocumentViewer.tsx
 ├── background/         # Service worker
 ├── content/           # Content scripts
 ├── lib/              # Shared utilities
 │   ├── document-repository.ts
-│   └── openai-provider.ts
+│   ├── openai-provider.ts
+│   └── settings-service.ts
+├── src/test-utils/    # Testing utilities
+│   ├── chrome-mocks.ts  # Chrome API and ReadableStream mocks
+│   └── constants.ts
 └── dist/             # Build output (gitignored)
 ```
+
+## Recent Feature Implementations
+
+### UI Polish Improvements (v1.1)
+
+#### API Key Save Flow Enhancement
+
+- Test Connection button transforms to "Save Key" after successful validation
+- Combined test and save operation in single user action
+- Validation state resets when API key input changes
+- State tracked via `apiKeyValidated` flag in EnhancedSettings component
+- Settings section auto-collapses after successful API key save
+
+#### Combined Extract & Summarize Workflow
+
+- Automatic summarization triggers after successful text extraction
+- StreamingSummarizer accepts `autoStart` prop for automatic initiation
+- Proper error handling for each stage of the combined flow
+- Manual retry capability preserved if auto-summarization fails
+
+#### Conditional Settings Display
+
+- Collapsible OpenAI configuration section when API key is configured
+- "Change API Key" button shown when collapsed
+- Collapse state persisted in `openaiConfigCollapsed` setting
+- Automatically expands for new users without API key
+
+#### Dark Mode Support
+
+- Full theming system with CSS custom properties
+- System preference detection via `matchMedia('(prefers-color-scheme: dark)')`
+- Three-way toggle: light → dark → system
+- Theme preference stored in settings as `theme: "light" | "dark" | "system"`
+- Theme toggle button in panel header with sun/moon icons
+
+#### UI Width Optimization
+
+- Reduced padding: tab-content (0.5rem), streaming-summarizer (0.5rem)
+- Controls and settings-section padding adjusted to 0.75rem
+- Minimum button touch targets maintained at 44px height
+- Better content density for narrow side panel format
+
+## Testing Setup Requirements
+
+- Global window.matchMedia mock required in vitest.setup.ts for dark mode tests
+- Use `setupMatchMediaMock()` from test-utils for component tests
+- Mock chrome.tabs.onActivated for tab change detection tests
 
 ## Future Considerations
 
 - Version 2 may migrate from `chrome.storage.local` to SQLite on OPFS for full-text search
 - Potential chunking support for documents >12k characters
 - Enhanced metadata extraction capabilities
+- Recent summaries list view for quick access to past content

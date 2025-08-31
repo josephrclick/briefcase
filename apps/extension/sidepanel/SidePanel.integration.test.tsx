@@ -33,6 +33,10 @@ global.chrome = {
   tabs: {
     query: vi.fn(),
     sendMessage: vi.fn(),
+    onActivated: {
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    },
   },
 } as any;
 
@@ -78,6 +82,7 @@ describe("SidePanel Integration Tests", () => {
     (SettingsService.loadSettings as any).mockResolvedValue(defaultSettings);
     (SettingsService.saveSettings as any).mockResolvedValue(undefined);
     (SettingsService.validateApiKeyFormat as any).mockReturnValue(true);
+    (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
 
     mockProvider = {
       summarize: vi.fn(),
