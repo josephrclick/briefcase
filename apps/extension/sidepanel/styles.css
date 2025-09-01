@@ -633,3 +633,67 @@ button:disabled {
 .document-delete-button:hover {
   background: var(--error-border);
 }
+
+/* Search Input Styles */
+.search-container {
+  position: relative;
+  margin: 0 1rem 1rem 1rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.search-clear-button:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Empty Search State */
+.empty-search {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.empty-search p {
+  margin: 0;
+  font-size: 0.9rem;
+}
