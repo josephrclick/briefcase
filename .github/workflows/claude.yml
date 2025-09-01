@@ -32,47 +32,21 @@ jobs:
 
       - name: Run Claude Code
         id: claude
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 
-          # This is an optional setting that allows Claude to read CI results on PRs
-          additional_permissions: |
-            actions: read
+          # Set model, max turns, and allowed tools via claude_args
+          claude_args: |
+            --model claude-sonnet-4-1-20250805
+            --max-turns 15
+            --allowed-tools "Bash(npm install)" "Bash(npm run build)" "Bash(npm run test)" "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run format:fix)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(*.json)" "Read(tsconfig.json)" "Read(.github/**)" "Write" "Edit" "MultiEdit"
 
-          # Specify model (defaults to Claude Sonnet 4)
-          model: "claude-sonnet-4-1-20250805"
-
-          # Set maximum conversation turns to prevent runaway conversations
-          max_turns: 10
-
-          # Allow Claude to run Chrome extension development commands
-          allowed_tools: |
-            Bash(npm install)
-            Bash(npm run build)
-            Bash(npm run test)
-            Bash(npm run lint)
-            Bash(npm run typecheck)
-            Bash(npm run format:fix)
-            Read(packages/**)
-            Read(apps/**)
-            Read(_docs/**)
-            Write
-            Edit
-            MultiEdit
-
-          # Custom instructions for Chrome extension development
-          custom_instructions: |
-            You are working on a Chrome Extension (Manifest V3) project called Briefcase.
-            Key guidelines:
-            - Follow TypeScript best practices
-            - Use functional React components with hooks
-            - Ensure Chrome Extension security best practices
-            - Reference _docs/PRD.md for requirements
-            - Check CLAUDE.md for project-specific instructions
-            - Use conventional commits format
-            - Test changes in Chrome before marking complete
-
-          # Custom environment variables for Claude
-          claude_env: |
-            NODE_ENV: development
+          # Concise instructions for interactive assistance
+          prompt: |
+            You're helping with Briefcase, a Chrome Extension (MV3) project.
+            - Check CLAUDE.md for project conventions
+            - Follow TypeScript/React best practices
+            - Run lint and typecheck after changes
+            - Provide concise, actionable responses
+            - Focus on solving the specific request

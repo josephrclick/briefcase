@@ -13,6 +13,9 @@ on:
       - "packages/**/*.tsx"
       - "packages/**/*.js"
       - "packages/**/*.jsx"
+      - "*.json"
+      - "*.md"
+      - ".github/workflows/*.yml"
 
 jobs:
   claude-review:
@@ -47,43 +50,23 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_args: |
             --model claude-sonnet-4-20250514
-            --allowed-tools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)"
+            --max-turns 20
+            --allowed-tools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(package.json)" "Read(tsconfig.json)"
 
           # Enable sticky comments to update same comment on subsequent pushes
           use_sticky_comment: true
 
           # Chrome Extension specific review prompt
           prompt: |
-            Please review this Chrome Extension (Manifest V3) pull request focusing on:
+            Review this Chrome Extension pull request. Keep your review concise and actionable.
 
-            **Chrome Extension Specific:**
-            - Manifest permissions are properly declared and justified
-            - Content scripts follow security best practices
-            - Service worker is properly configured for MV3
-            - Side panel functionality works correctly
-            - No inline scripts or eval() usage
-            - Proper message passing between contexts
+            Focus on critical issues only:
+            1. Security vulnerabilities (API keys, XSS, CSP violations)
+            2. Chrome Extension manifest/permissions issues
+            3. Breaking changes or bugs
+            4. Type safety violations
+            5. Missing error handling
 
-            **TypeScript & React:**
-            - Type safety and proper interface usage
-            - React hooks are used correctly
-            - No unnecessary re-renders
-            - Component accessibility (ARIA attributes)
-
-            **Security:**
-            - No API keys or sensitive data exposed
-            - Input validation and sanitization
-            - Content Security Policy compliance
-            - Safe DOM manipulation
-
-            **Code Quality:**
-            - Follows project conventions in CLAUDE.md
-            - Uses existing patterns from the codebase
-            - Proper error handling
-            - Performance considerations
-
-            **Testing:**
-            - Test coverage for new features
-            - Edge cases are handled
-
-            Be constructive and educational in feedback. Reference specific line numbers when possible.
+            Skip minor style issues unless they impact functionality.
+            Reference specific line numbers.
+            Provide code suggestions for any issues found.
