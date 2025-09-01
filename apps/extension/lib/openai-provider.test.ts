@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, Mock } from "vitest";
 import { OpenAIProvider } from "./openai-provider";
+import { OpenAIModel } from "./settings-service";
 import OpenAI from "openai";
 import { MOCK_API_KEY } from "../src/test-utils/constants";
 
@@ -36,6 +37,15 @@ describe("OpenAIProvider", () => {
       });
     });
 
+    it("should create an instance with API key and model", () => {
+      const modelProvider = new OpenAIProvider(MOCK_API_KEY, "gpt-5-nano");
+      expect(modelProvider).toBeDefined();
+      expect(OpenAI).toHaveBeenCalledWith({
+        apiKey: MOCK_API_KEY,
+        dangerouslyAllowBrowser: true,
+      });
+    });
+
     it("should throw error if API key is empty", () => {
       expect(() => new OpenAIProvider("")).toThrow("API key is required");
     });
@@ -50,7 +60,7 @@ describe("OpenAIProvider", () => {
   describe("validateApiKey", () => {
     it("should return true for valid API key", async () => {
       mockOpenAIClient.models.list.mockResolvedValue({
-        data: [{ id: "gpt-3.5-turbo" }],
+        data: [{ id: "gpt-4o-mini" }],
       });
 
       const result = await provider.validateApiKey();
@@ -118,7 +128,7 @@ describe("OpenAIProvider", () => {
 
       expect(chunks).toEqual(["This is ", "a summary."]);
       expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: expect.arrayContaining([
           expect.objectContaining({ role: "system" }),
           expect.objectContaining({
@@ -153,6 +163,76 @@ describe("OpenAIProvider", () => {
       expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           max_tokens: 400, // medium length should be ~300 words
+        }),
+      );
+    });
+
+    it("should use GPT-5 parameters when provider is initialized with gpt-5-nano", async () => {
+      const gpt5Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-5-nano");
+      const mockStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: "Summary" } }] };
+        },
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockStream);
+
+      const longText = "a".repeat(150);
+      const stream = gpt5Provider.summarize(longText, {
+        length: "brief",
+        style: "bullets",
+      });
+
+      const reader = stream.getReader();
+      await reader.read();
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-5-nano",
+          verbosity: "low",
+          reasoning_effort: "minimal",
+          stream: true,
+          max_tokens: 200,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          temperature: expect.any(Number),
+        }),
+      );
+    });
+
+    it("should use GPT-4 parameters when provider is initialized with gpt-4.1-nano", async () => {
+      const gpt4Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-4.1-nano");
+      const mockStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: "Summary" } }] };
+        },
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockStream);
+
+      const longText = "a".repeat(150);
+      const stream = gpt4Provider.summarize(longText, {
+        length: "brief",
+        style: "bullets",
+      });
+
+      const reader = stream.getReader();
+      await reader.read();
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-4.1-nano",
+          temperature: 0.3,
+          stream: true,
+          max_tokens: 200,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          verbosity: expect.any(String),
+          reasoning_effort: expect.any(String),
         }),
       );
     });
@@ -546,6 +626,53 @@ The article discusses important topics.
       }
 
       expect(chunks.length).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe("getModelParameters", () => {
+    it("should return GPT-5 parameters for gpt-5-nano model", () => {
+      const model: OpenAIModel = "gpt-5-nano";
+      const params = OpenAIProvider.getModelParameters(model);
+
+      expect(params).toEqual({
+        model: "gpt-5-nano",
+        verbosity: "low",
+        reasoning_effort: "minimal",
+      });
+      expect(params).not.toHaveProperty("temperature");
+    });
+
+    it("should return GPT-4 parameters for gpt-4o-mini model", () => {
+      const model: OpenAIModel = "gpt-4o-mini";
+      const params = OpenAIProvider.getModelParameters(model);
+
+      expect(params).toEqual({
+        model: "gpt-4o-mini",
+        temperature: 0.3,
+      });
+      expect(params).not.toHaveProperty("verbosity");
+      expect(params).not.toHaveProperty("reasoning_effort");
+    });
+
+    it("should return GPT-4 parameters for gpt-4.1-nano model", () => {
+      const model: OpenAIModel = "gpt-4.1-nano";
+      const params = OpenAIProvider.getModelParameters(model);
+
+      expect(params).toEqual({
+        model: "gpt-4.1-nano",
+        temperature: 0.3,
+      });
+      expect(params).not.toHaveProperty("verbosity");
+      expect(params).not.toHaveProperty("reasoning_effort");
+    });
+
+    it("should return default parameters when model is undefined", () => {
+      const params = OpenAIProvider.getModelParameters(undefined);
+
+      expect(params).toEqual({
+        model: "gpt-4o-mini",
+        temperature: 0.3,
+      });
     });
   });
 });

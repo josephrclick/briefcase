@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { OpenAIModel } from "./settings-service";
 
 export interface SummarizationParams {
   length: "brief" | "medium";
@@ -18,8 +19,9 @@ const BASE_RETRY_DELAY = 1000;
 
 export class OpenAIProvider {
   private client: OpenAI;
+  private model: OpenAIModel;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: OpenAIModel) {
     if (!apiKey) {
       throw new Error("API key is required");
     }
@@ -39,6 +41,27 @@ export class OpenAIProvider {
       apiKey,
       dangerouslyAllowBrowser: true,
     });
+
+    this.model = model || "gpt-4o-mini";
+  }
+
+  static getModelParameters(model?: OpenAIModel): Record<string, any> {
+    const selectedModel = model || "gpt-4o-mini";
+
+    // GPT-5 family: omit temperature, add verbosity and reasoning_effort
+    if (selectedModel.startsWith("gpt-5")) {
+      return {
+        model: selectedModel,
+        verbosity: "low",
+        reasoning_effort: "minimal",
+      };
+    }
+
+    // GPT-4 family: include temperature, omit verbosity and reasoning_effort
+    return {
+      model: selectedModel,
+      temperature: 0.3,
+    };
   }
 
   private validateInputText(text: string): void {
@@ -145,12 +168,14 @@ Be accurate, clear, and focus on the most important information.`;
 
     const systemPrompt = this.getSystemPrompt(params);
     const maxTokens = this.getMaxTokens(params.length);
+    const modelParams = OpenAIProvider.getModelParameters(this.model);
 
     return new ReadableStream<string>({
       start: async (controller) => {
         try {
           const stream = await this.client.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: modelParams.model,
+            ...modelParams,
             messages: [
               { role: "system", content: systemPrompt },
               {
@@ -159,7 +184,6 @@ Be accurate, clear, and focus on the most important information.`;
               },
             ],
             stream: true,
-            temperature: 0.3,
             max_tokens: maxTokens,
           });
 
@@ -191,10 +215,12 @@ Be accurate, clear, and focus on the most important information.`;
 
     const systemPrompt = this.getSystemPrompt(params);
     const maxTokens = this.getMaxTokens(params.length);
+    const modelParams = OpenAIProvider.getModelParameters(this.model);
 
     const response = await this.retryWithBackoff(async () => {
       return await this.client.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: modelParams.model,
+        ...modelParams,
         messages: [
           { role: "system", content: systemPrompt },
           {
@@ -203,7 +229,6 @@ Be accurate, clear, and focus on the most important information.`;
           },
         ],
         stream: false,
-        temperature: 0.3,
         max_tokens: maxTokens,
       });
     });
