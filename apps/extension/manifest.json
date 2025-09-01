@@ -34,5 +34,11 @@
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["sidepanel/index.html", "sidepanel/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
