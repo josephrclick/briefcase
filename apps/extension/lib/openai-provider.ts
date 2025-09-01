@@ -174,6 +174,7 @@ Be accurate, clear, and focus on the most important information.`;
       start: async (controller) => {
         try {
           const stream = await this.client.chat.completions.create({
+            model: modelParams.model,
             ...modelParams,
             messages: [
               { role: "system", content: systemPrompt },
@@ -218,6 +219,7 @@ Be accurate, clear, and focus on the most important information.`;
 
     const response = await this.retryWithBackoff(async () => {
       return await this.client.chat.completions.create({
+        model: modelParams.model,
         ...modelParams,
         messages: [
           { role: "system", content: systemPrompt },
