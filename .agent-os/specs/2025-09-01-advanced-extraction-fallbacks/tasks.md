@@ -26,15 +26,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 2.6 Add framework detection (React, Vue, Angular) for optimized waiting strategies
   - [x] 2.7 Verify all SPA detection and dynamic content tests pass
 
-- [ ] 3. Improve DOM Analysis with Advanced Heuristics
-  - [ ] 3.1 Write tests for enhanced content container detection and semantic analysis
-  - [ ] 3.2 Implement semantic HTML5 element analysis (article, main, section priority)
-  - [ ] 3.3 Add ARIA role detection for content identification
-  - [ ] 3.4 Create content density analysis algorithm for main content identification
-  - [ ] 3.5 Implement text-to-noise ratio calculation with improved scoring
-  - [ ] 3.6 Add visual hierarchy analysis using CSS computed styles
-  - [ ] 3.7 Create fallback chain orchestration for multiple extraction strategies
-  - [ ] 3.8 Verify all DOM analysis enhancement tests pass
+- [x] 3. Improve DOM Analysis with Advanced Heuristics
+  - [x] 3.1 Write tests for enhanced content container detection and semantic analysis
+  - [x] 3.2 Implement semantic HTML5 element analysis (article, main, section priority)
+  - [x] 3.3 Add ARIA role detection for content identification
+  - [x] 3.4 Create content density analysis algorithm for main content identification
+  - [x] 3.5 Implement text-to-noise ratio calculation with improved scoring
+  - [x] 3.6 Add visual hierarchy analysis using CSS computed styles
+  - [x] 3.7 Create fallback chain orchestration for multiple extraction strategies
+  - [x] 3.8 Verify all DOM analysis enhancement tests pass
 
 - [ ] 4. Build Manual Selection Mode Interface
   - [ ] 4.1 Write tests for manual selection UI, region highlighting, and user interactions
