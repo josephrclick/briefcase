@@ -20,14 +20,14 @@ This tasks checklist is for the spec detailed in @.agent-os/specs/2025-08-31-exp
   - [x] 2.7 Implement error handling and filename generation
   - [x] 2.8 Verify all export service tests pass
 
-- [ ] 3. Chrome Downloads API Integration
-  - [ ] 3.1 Write tests for downloads API integration
-  - [ ] 3.2 Implement download trigger using chrome.downloads.download()
-  - [ ] 3.3 Configure MIME types for each export format
-  - [ ] 3.4 Add download progress tracking and cancellation
-  - [ ] 3.5 Implement retry mechanism for failed downloads
-  - [ ] 3.6 Handle browser download preferences
-  - [ ] 3.7 Verify all downloads integration tests pass
+- [x] 3. Chrome Downloads API Integration
+  - [x] 3.1 Write tests for downloads API integration
+  - [x] 3.2 Implement download trigger using chrome.downloads.download()
+  - [x] 3.3 Configure MIME types for each export format
+  - [x] 3.4 Add download progress tracking and cancellation
+  - [x] 3.5 Implement retry mechanism for failed downloads
+  - [x] 3.6 Handle browser download preferences
+  - [x] 3.7 Verify all downloads integration tests pass
 
 - [ ] 4. Export UI Components
   - [ ] 4.1 Write tests for Export UI components and interactions
