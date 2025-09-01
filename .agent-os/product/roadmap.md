@@ -34,7 +34,7 @@
 - [x] Retry mechanism for failures - Smart retry with timeout detection `S`
 - [ ] Advanced extraction fallbacks - Custom extractors for edge cases `L`
 - [x] Delete all data functionality - Complete local data removal option `XS`
-- [ ] Export summaries feature - Download summaries as JSON/Markdown `S`
+- [x] Export summaries feature - Download summaries as JSON/Markdown `S`
 
 ### Dependencies
 

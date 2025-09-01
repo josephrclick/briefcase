@@ -56,7 +56,7 @@ describe("Model Integration Tests", () => {
           verbosity: "low",
           reasoning_effort: "minimal",
           stream: false,
-          max_tokens: 200,
+          max_completion_tokens: 200,
         }),
       );
 

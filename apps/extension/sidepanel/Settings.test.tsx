@@ -2,11 +2,27 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import { Settings } from "./Settings";
 import { MOCK_API_KEY } from "../src/test-utils/constants";
+import { SettingsService } from "../lib/settings-service";
+import { vi } from "vitest";
+
+vi.mock("../lib/settings-service");
 
 describe("Settings Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (chrome.storage.local.get as any).mockResolvedValue({});
+
+    // Mock SettingsService methods
+    (SettingsService.testApiKey as any) = vi
+      .fn()
+      .mockResolvedValue({ success: true });
+    (SettingsService.loadSettings as any) = vi.fn().mockResolvedValue({
+      openaiApiKey: "",
+      privacyBannerDismissed: false,
+    });
+    (SettingsService.saveSettings as any) = vi
+      .fn()
+      .mockResolvedValue(undefined);
   });
 
   describe("Initial Rendering", () => {
@@ -156,7 +172,7 @@ describe("Settings Component", () => {
   describe("Connection Testing", () => {
     it("should test API connection with valid key", async () => {
       const user = userEvent.setup();
-      (chrome.runtime.sendMessage as any).mockResolvedValue({ success: true });
+      (SettingsService.testApiKey as any).mockResolvedValue({ success: true });
 
       render(<Settings />);
 
@@ -182,7 +198,7 @@ describe("Settings Component", () => {
 
     it("should show error for failed connection test", async () => {
       const user = userEvent.setup();
-      (chrome.runtime.sendMessage as any).mockResolvedValue({
+      (SettingsService.testApiKey as any).mockResolvedValue({
         success: false,
         error: "Invalid API key",
       });
