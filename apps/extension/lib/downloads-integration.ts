@@ -29,6 +29,12 @@ export interface DownloadProgress {
   progress: number;
 }
 
+// Extended interface for Chrome download delta with byte tracking
+interface ExtendedDownloadDelta extends chrome.downloads.DownloadDelta {
+  bytesReceived?: { current?: number; previous?: number };
+  totalBytes?: { current?: number; previous?: number };
+}
+
 interface ActiveDownload {
   downloadId: number;
   onProgress?: (progress: DownloadProgress) => void;
@@ -230,11 +236,14 @@ export class DownloadsIntegration {
       };
 
       // Calculate progress percentage
-      // Note: Chrome types may not include bytesReceived/totalBytes, so we use any cast
-      const deltaAny = delta as any;
-      if (deltaAny.bytesReceived?.current && deltaAny.totalBytes?.current) {
-        progress.bytesReceived = deltaAny.bytesReceived.current;
-        progress.totalBytes = deltaAny.totalBytes.current;
+      // Use extended interface for proper type safety
+      const extendedDelta = delta as ExtendedDownloadDelta;
+      if (
+        extendedDelta.bytesReceived?.current &&
+        extendedDelta.totalBytes?.current
+      ) {
+        progress.bytesReceived = extendedDelta.bytesReceived.current;
+        progress.totalBytes = extendedDelta.totalBytes.current;
 
         if (
           progress.totalBytes &&
