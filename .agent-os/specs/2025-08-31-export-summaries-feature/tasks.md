@@ -10,15 +10,15 @@ This tasks checklist is for the spec detailed in @.agent-os/specs/2025-08-31-exp
   - [x] 1.3 Test permission is properly granted during extension reload
   - [x] 1.4 Verify downloads API is accessible in background service worker
 
-- [ ] 2. ExportService Core Implementation
-  - [ ] 2.1 Write tests for ExportService class and format transformations
-  - [ ] 2.2 Create ExportService class in /apps/extension/lib/export-service.ts
-  - [ ] 2.3 Implement JSON export method with Document serialization
-  - [ ] 2.4 Implement Markdown export with formatted headers and metadata
-  - [ ] 2.5 Implement CSV export with proper escaping and flattening
-  - [ ] 2.6 Add batch processing for large datasets (25-document chunks)
-  - [ ] 2.7 Implement error handling and filename generation
-  - [ ] 2.8 Verify all export service tests pass
+- [x] 2. ExportService Core Implementation
+  - [x] 2.1 Write tests for ExportService class and format transformations
+  - [x] 2.2 Create ExportService class in /apps/extension/lib/export-service.ts
+  - [x] 2.3 Implement JSON export method with Document serialization
+  - [x] 2.4 Implement Markdown export with formatted headers and metadata
+  - [x] 2.5 Implement CSV export with proper escaping and flattening
+  - [x] 2.6 Add batch processing for large datasets (25-document chunks)
+  - [x] 2.7 Implement error handling and filename generation
+  - [x] 2.8 Verify all export service tests pass
 
 - [ ] 3. Chrome Downloads API Integration
   - [ ] 3.1 Write tests for downloads API integration
