@@ -161,7 +161,7 @@
 /* Tab Content */
 .tab-content {
   flex: 1;
-  padding: 0.5rem;
+  padding: 0.25rem;
   overflow-y: auto;
 }
 
@@ -189,7 +189,7 @@
 
 /* Streaming Summarizer Styles */
 .streaming-summarizer {
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 
 .extraction-status {
@@ -210,7 +210,7 @@
 .controls {
   background: var(--bg-primary);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
 }
@@ -409,7 +409,7 @@ button:disabled {
 .settings-section {
   background: var(--bg-primary);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: 0.5rem;
   margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
 }
@@ -531,4 +531,99 @@ button:disabled {
 
 .settings-link {
   text-decoration: none;
+}
+
+/* Recent List / History Tab Styles */
+.recent-list {
+  padding: 0.25rem;
+}
+
+.recent-list h2 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.recent-list.empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.document-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.document-item {
+  position: relative;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.document-item:hover {
+  background: var(--bg-secondary);
+}
+
+.document-info {
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.document-info h3 {
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.document-info .metadata {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.document-info .domain {
+  color: var(--accent-color);
+}
+
+.summary-preview {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.delete-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-radius: 4px;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background: var(--error-border);
 }

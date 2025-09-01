@@ -2,6 +2,21 @@ import { FunctionalComponent } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
 import { EnhancedSettings } from "./EnhancedSettings";
+import { RecentList } from "./RecentList";
+import { DocumentViewer } from "./DocumentViewer";
+
+// DocumentViewer expects this format
+interface ViewerDocument {
+  id: string;
+  title: string;
+  domain: string;
+  date: string;
+  rawText?: string;
+  summary?: {
+    keyPoints: string[];
+    tldr: string;
+  };
+}
 import {
   SettingsService,
   SettingsData,
@@ -56,7 +71,9 @@ interface TabInfo {
 }
 
 export const SidePanel: FunctionalComponent = () => {
-  const [activeTab, setActiveTab] = useState("summarize");
+  const [activeTab, setActiveTab] = useState<
+    "summarize" | "history" | "settings"
+  >("summarize");
   const [settings, setSettings] = useState<SettingsData | null>(null);
   const [extractedContent, setExtractedContent] = useState<ExtractedContent>({
     text: "",
@@ -65,6 +82,9 @@ export const SidePanel: FunctionalComponent = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [showPrivacyBanner, setShowPrivacyBanner] = useState(false);
   const [documentRepository] = useState(() => new DocumentRepository());
+  const [viewingDocument, setViewingDocument] = useState<ViewerDocument | null>(
+    null,
+  );
   const [uiState, setUiState] = useState<UIState>("idle");
   const [currentTabInfo, setCurrentTabInfo] = useState<TabInfo | null>(null);
   const [autoStartSummarization, setAutoStartSummarization] = useState(false);
@@ -413,6 +433,12 @@ export const SidePanel: FunctionalComponent = () => {
           onClick={() => setActiveTab("summarize")}
         />
         <Tab
+          id="history"
+          label="History"
+          isActive={activeTab === "history"}
+          onClick={() => setActiveTab("history")}
+        />
+        <Tab
           id="settings"
           label="Settings"
           isActive={activeTab === "settings"}
@@ -554,6 +580,31 @@ export const SidePanel: FunctionalComponent = () => {
                   Refresh
                 </button>
               </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "history" && (
+          <div role="tabpanel" aria-label="History">
+            {viewingDocument ? (
+              <DocumentViewer
+                document={viewingDocument}
+                onBack={() => setViewingDocument(null)}
+              />
+            ) : (
+              <RecentList
+                onViewDocument={(doc) => {
+                  // Convert DisplayDocument to ViewerDocument format
+                  setViewingDocument({
+                    id: doc.id,
+                    title: doc.title,
+                    domain: doc.domain,
+                    date: doc.date, // This comes from RecentList already formatted
+                    rawText: doc.rawText,
+                    summary: doc.summary,
+                  });
+                }}
+              />
             )}
           </div>
         )}
