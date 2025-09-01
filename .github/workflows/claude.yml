@@ -40,7 +40,7 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-1-20250805
             --max-turns 15
-            --allowed-tools "Bash(npm install)" "Bash(npm run build)" "Bash(npm run test)" "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run format:fix)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(*.json)" "Read(tsconfig.json)" "Read(.github/**)" "Write" "Edit" "MultiEdit"
+            --allowedTools "Bash(npm install)" "Bash(npm run build)" "Bash(npm run test)" "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run format:fix)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(*.json)" "Read(tsconfig.json)" "Read(.github/**)" "Write" "Edit" "MultiEdit"
 
           # Concise instructions for interactive assistance
           prompt: |

@@ -48,10 +48,12 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # All Claude CLI arguments including model, max-turns, and allowed tools
           claude_args: |
             --model claude-sonnet-4-20250514
             --max-turns 20
-            --allowed-tools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(package.json)" "Read(tsconfig.json)"
+            --allowedTools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Bash(npm run)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(package.json)" "Read(tsconfig.json)" "mcp__github_ci__get_ci_status"
 
           # Enable sticky comments to update same comment on subsequent pushes
           use_sticky_comment: true
