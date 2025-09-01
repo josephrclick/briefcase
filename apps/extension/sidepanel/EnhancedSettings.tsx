@@ -7,6 +7,11 @@ import {
   DEFAULT_SETTINGS,
   OpenAIModel,
 } from "../lib/settings-service";
+import {
+  ExportService,
+  ExportFormat,
+  ExportOptions,
+} from "../lib/export-service";
 
 interface EnhancedSettingsProps {
   onSettingsUpdate?: () => void;
@@ -30,9 +35,37 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
   const [apiKeyValidated, setApiKeyValidated] = useState(false);
   const [configCollapsed, setConfigCollapsed] = useState(false);
 
+  // Export-related state
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("json");
+  const [exportLimit, setExportLimit] = useState<string>("");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
+  const [hasDownloadsPermission, setHasDownloadsPermission] = useState(false);
+
   useEffect(() => {
     loadSettings();
   }, []);
+
+  useEffect(() => {
+    checkDownloadsPermission();
+  }, []);
+
+  const checkDownloadsPermission = async () => {
+    try {
+      const hasPermission = await chrome.permissions.contains({
+        permissions: ["downloads"],
+      });
+      setHasDownloadsPermission(hasPermission);
+    } catch (error) {
+      console.error("Failed to check downloads permission:", error);
+      setHasDownloadsPermission(false);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -190,6 +223,110 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
     await SettingsService.saveSettings({
       openaiConfigCollapsed: newCollapsedState,
     });
+  };
+
+  // Export-related handlers
+  const handleExportLimitChange = (value: string) => {
+    // Validate input - allow empty or positive numbers
+    if (value === "" || (!isNaN(Number(value)) && Number(value) > 0)) {
+      setExportLimit(value);
+    }
+  };
+
+  const handleExport = async () => {
+    if (!hasDownloadsPermission) {
+      setMessage({ type: "error", text: "Downloads permission not granted" });
+      return;
+    }
+
+    if (!settings.openaiApiKey) {
+      setMessage({
+        type: "error",
+        text: "Configure OpenAI API key to enable export",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    setExportProgress(null);
+    setMessage(null);
+
+    try {
+      // Create abort controller for cancellation
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      // Prepare export options
+      const exportOptions: ExportOptions = {
+        signal: controller.signal,
+        onProgress: (current, total) => {
+          setExportProgress({ current, total });
+        },
+      };
+
+      // Add limit if specified
+      if (exportLimit && !isNaN(Number(exportLimit))) {
+        exportOptions.limit = Number(exportLimit);
+      }
+
+      // Call appropriate export method based on format
+      let result;
+      switch (exportFormat) {
+        case "json":
+          result = await ExportService.exportAsJSON(exportOptions);
+          break;
+        case "markdown":
+          result = await ExportService.exportAsMarkdown(exportOptions);
+          break;
+        case "csv":
+          result = await ExportService.exportAsCSV(exportOptions);
+          break;
+        default:
+          throw new Error(`Unsupported format: ${exportFormat}`);
+      }
+
+      if (result.success) {
+        setMessage({
+          type: "success",
+          text: `Successfully exported ${result.documentCount} documents as ${result.format?.toUpperCase()}`,
+        });
+
+        // Auto-dismiss success message after 5 seconds
+        setTimeout(() => {
+          setMessage(null);
+        }, 5000);
+      } else {
+        setMessage({
+          type: "error",
+          text: `Export failed: ${result.error}`,
+        });
+      }
+    } catch (error: any) {
+      if (
+        error.message === "Export cancelled" ||
+        abortController?.signal.aborted
+      ) {
+        setMessage({
+          type: "info",
+          text: "Export cancelled",
+        });
+      } else {
+        setMessage({
+          type: "error",
+          text: `Export failed: ${error.message || "Unknown error"}`,
+        });
+      }
+    } finally {
+      setIsExporting(false);
+      setExportProgress(null);
+      setAbortController(null);
+    }
+  };
+
+  const handleCancelExport = () => {
+    if (abortController) {
+      abortController.abort();
+    }
   };
 
   if (isLoading) {
@@ -357,6 +494,143 @@ export const EnhancedSettings: FunctionalComponent<EnhancedSettingsProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Export Section - Only show if downloads permission is granted */}
+      {hasDownloadsPermission && (
+        <div className="settings-section">
+          <h3>Export Data</h3>
+
+          {/* Format Selection */}
+          <div className="form-group">
+            <label>Export Format</label>
+            <div className="radio-group">
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="json"
+                  checked={exportFormat === "json"}
+                  onChange={() => setExportFormat("json")}
+                />
+                <span>JSON</span>
+              </label>
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="markdown"
+                  checked={exportFormat === "markdown"}
+                  onChange={() => setExportFormat("markdown")}
+                />
+                <span>Markdown</span>
+              </label>
+              <label className="radio-option">
+                <input
+                  type="radio"
+                  name="exportFormat"
+                  value="csv"
+                  checked={exportFormat === "csv"}
+                  onChange={() => setExportFormat("csv")}
+                />
+                <span>CSV</span>
+              </label>
+            </div>
+            <div className="help-text">
+              Choose the format for your exported document summaries
+            </div>
+          </div>
+
+          {/* Export Scope */}
+          <div className="form-group">
+            <label htmlFor="export-limit">Export Scope</label>
+            <input
+              id="export-limit"
+              type="number"
+              min="1"
+              value={exportLimit}
+              onInput={(e) =>
+                handleExportLimitChange((e.target as HTMLInputElement).value)
+              }
+              onBlur={(e) => {
+                const value = (e.target as HTMLInputElement).value;
+                if (value && (isNaN(Number(value)) || Number(value) <= 0)) {
+                  setMessage({
+                    type: "error",
+                    text: "Document limit must be a positive number",
+                  });
+                } else {
+                  // Clear error message if valid
+                  if (
+                    message?.text === "Document limit must be a positive number"
+                  ) {
+                    setMessage(null);
+                  }
+                }
+              }}
+              placeholder="Leave empty for all documents"
+              aria-label="Document Limit"
+            />
+            <div className="help-text">
+              Limit the number of documents to export (optional)
+            </div>
+          </div>
+
+          {/* Export Progress */}
+          {isExporting && exportProgress && (
+            <div className="form-group">
+              <div className="progress-info">
+                <span>
+                  Processing {exportProgress.current} of {exportProgress.total}
+                </span>
+                <span>
+                  {Math.round(
+                    (exportProgress.current / (exportProgress.total || 1)) *
+                      100,
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${Math.round((exportProgress.current / (exportProgress.total || 1)) * 100)}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {/* Export Actions */}
+          <div className="button-group">
+            {!isExporting ? (
+              <button
+                onClick={handleExport}
+                disabled={!settings.openaiApiKey || !hasDownloadsPermission}
+                className="primary"
+              >
+                Export Documents
+              </button>
+            ) : (
+              <>
+                <span className="export-status">
+                  {exportProgress ? "Processing..." : "Exporting..."}
+                </span>
+                <button onClick={handleCancelExport} className="secondary">
+                  Cancel Export
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Help text when export is disabled */}
+          {!settings.openaiApiKey && (
+            <div className="help-text info">
+              Configure OpenAI API key to enable export
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="button-group primary-actions">
         <button onClick={handleSave} disabled={isSaving} className="primary">

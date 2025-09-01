@@ -16,6 +16,13 @@ describe("EnhancedSettings Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Mock chrome.permissions API
+    (chrome.permissions as any) = {
+      contains: vi.fn().mockResolvedValue(false),
+      request: vi.fn().mockResolvedValue(true),
+    };
+
     (SettingsService.loadSettings as any).mockResolvedValue(mockSettings);
     (SettingsService.saveSettings as any).mockResolvedValue(undefined);
     (SettingsService.validateApiKeyFormat as any).mockReturnValue(true);

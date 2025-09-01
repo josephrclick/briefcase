@@ -29,22 +29,22 @@ This tasks checklist is for the spec detailed in @.agent-os/specs/2025-08-31-exp
   - [x] 3.6 Handle browser download preferences
   - [x] 3.7 Verify all downloads integration tests pass
 
-- [ ] 4. Export UI Components
-  - [ ] 4.1 Write tests for Export UI components and interactions
-  - [ ] 4.2 Add Export section to EnhancedSettings.tsx
-  - [ ] 4.3 Create format selection radio buttons (JSON, Markdown, CSV)
-  - [ ] 4.4 Implement export scope selection UI
-  - [ ] 4.5 Add progress indicator with loading animations
-  - [ ] 4.6 Create export button with state management
-  - [ ] 4.7 Implement user feedback and error display
-  - [ ] 4.8 Verify all UI component tests pass
+- [x] 4. Export UI Components
+  - [x] 4.1 Write tests for Export UI components and interactions
+  - [x] 4.2 Add Export section to EnhancedSettings.tsx
+  - [x] 4.3 Create format selection radio buttons (JSON, Markdown, CSV)
+  - [x] 4.4 Implement export scope selection UI
+  - [x] 4.5 Add progress indicator with loading animations
+  - [x] 4.6 Create export button with state management
+  - [x] 4.7 Implement user feedback and error display
+  - [x] 4.8 Verify all UI component tests pass
 
-- [ ] 5. Integration Testing and Performance Validation
-  - [ ] 5.1 Write integration test suite for complete export workflow
-  - [ ] 5.2 Test with various document counts (1, 10, 50, 100+)
-  - [ ] 5.3 Validate exported file content integrity
-  - [ ] 5.4 Test export cancellation and retry mechanisms
-  - [ ] 5.5 Verify memory usage with large datasets
-  - [ ] 5.6 Test error scenarios and edge cases
-  - [ ] 5.7 Validate files open in appropriate applications
-  - [ ] 5.8 Verify all integration tests pass
+- [x] 5. Integration Testing and Performance Validation
+  - [x] 5.1 Write integration test suite for complete export workflow
+  - [x] 5.2 Test with various document counts (1, 10, 50, 100+)
+  - [x] 5.3 Validate exported file content integrity
+  - [x] 5.4 Test export cancellation and retry mechanisms
+  - [x] 5.5 Verify memory usage with large datasets
+  - [x] 5.6 Test error scenarios and edge cases
+  - [x] 5.7 Validate files open in appropriate applications
+  - [x] 5.8 Verify all integration tests pass
