@@ -48,11 +48,10 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-20250514
             --allowed-tools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)"
-
+            --max-tokens 4000
+            
           # Enable sticky comments to update same comment on subsequent pushes
           use_sticky_comment: true
-
-          max_tokens: 4000
 
           # Chrome Extension specific review prompt
           prompt: |
