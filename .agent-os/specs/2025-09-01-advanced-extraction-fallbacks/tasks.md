@@ -17,14 +17,14 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.7 Implement documentation site extractor with enhanced semantic analysis
   - [x] 1.8 Verify all site-specific extractor tests pass
 
-- [ ] 2. Enhance SPA Detection and Dynamic Content Handling
-  - [ ] 2.1 Write tests for SPA detection, content loading waits, and stability verification
-  - [ ] 2.2 Implement DOM stability detection with MutationObserver improvements
-  - [ ] 2.3 Add intelligent timeout management based on content type and site patterns
-  - [ ] 2.4 Create content loading indicators and progress feedback
-  - [ ] 2.5 Implement retry logic for failed dynamic content extraction
-  - [ ] 2.6 Add framework detection (React, Vue, Angular) for optimized waiting strategies
-  - [ ] 2.7 Verify all SPA detection and dynamic content tests pass
+- [x] 2. Enhance SPA Detection and Dynamic Content Handling
+  - [x] 2.1 Write tests for SPA detection, content loading waits, and stability verification
+  - [x] 2.2 Implement DOM stability detection with MutationObserver improvements
+  - [x] 2.3 Add intelligent timeout management based on content type and site patterns
+  - [x] 2.4 Create content loading indicators and progress feedback
+  - [x] 2.5 Implement retry logic for failed dynamic content extraction
+  - [x] 2.6 Add framework detection (React, Vue, Angular) for optimized waiting strategies
+  - [x] 2.7 Verify all SPA detection and dynamic content tests pass
 
 - [ ] 3. Improve DOM Analysis with Advanced Heuristics
   - [ ] 3.1 Write tests for enhanced content container detection and semantic analysis
