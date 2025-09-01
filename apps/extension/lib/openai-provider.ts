@@ -173,6 +173,11 @@ Be accurate, clear, and focus on the most important information.`;
     return new ReadableStream<string>({
       start: async (controller) => {
         try {
+          const isGPT5 = this.model?.startsWith("gpt-5");
+          const tokenParam = isGPT5
+            ? { max_completion_tokens: maxTokens }
+            : { max_tokens: maxTokens };
+
           const stream = await this.client.chat.completions.create({
             model: modelParams.model,
             ...modelParams,
@@ -184,7 +189,7 @@ Be accurate, clear, and focus on the most important information.`;
               },
             ],
             stream: true,
-            max_tokens: maxTokens,
+            ...tokenParam,
           });
 
           for await (const chunk of stream) {
@@ -218,6 +223,11 @@ Be accurate, clear, and focus on the most important information.`;
     const modelParams = OpenAIProvider.getModelParameters(this.model);
 
     const response = await this.retryWithBackoff(async () => {
+      const isGPT5 = this.model?.startsWith("gpt-5");
+      const tokenParam = isGPT5
+        ? { max_completion_tokens: maxTokens }
+        : { max_tokens: maxTokens };
+
       return await this.client.chat.completions.create({
         model: modelParams.model,
         ...modelParams,
@@ -229,7 +239,7 @@ Be accurate, clear, and focus on the most important information.`;
           },
         ],
         stream: false,
-        max_tokens: maxTokens,
+        ...tokenParam,
       });
     });
 

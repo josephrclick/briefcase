@@ -413,3 +413,5 @@ Thumbs.db
 .archive/
 .gemini/
 .codex/
+.playwright-mcp/
+.playwright/

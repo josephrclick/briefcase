@@ -98,7 +98,7 @@ export const RecentList: FunctionalComponent<RecentListProps> = ({
               )}
             </div>
             <button
-              className="delete-button"
+              className="document-delete-button"
               onClick={(e) => {
                 e.stopPropagation();
                 handleDelete(doc.id);

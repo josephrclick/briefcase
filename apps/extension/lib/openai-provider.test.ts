@@ -192,12 +192,13 @@ describe("OpenAIProvider", () => {
           verbosity: "low",
           reasoning_effort: "minimal",
           stream: true,
-          max_tokens: 200,
+          max_completion_tokens: 200,
         }),
       );
       expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
         expect.not.objectContaining({
           temperature: expect.any(Number),
+          max_tokens: expect.any(Number),
         }),
       );
     });
@@ -672,6 +673,191 @@ The article discusses important topics.
       expect(params).toEqual({
         model: "gpt-4o-mini",
         temperature: 0.3,
+      });
+    });
+  });
+
+  describe("Model-specific max_tokens handling", () => {
+    it("should use max_completion_tokens for GPT-5 models in summarize", async () => {
+      const gpt5Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-5-nano");
+      const mockStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: "Summary" } }] };
+        },
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockStream);
+
+      const longText = "a".repeat(150);
+      const stream = gpt5Provider.summarize(longText, {
+        length: "brief",
+        style: "bullets",
+      });
+
+      const reader = stream.getReader();
+      await reader.read();
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-5-nano",
+          verbosity: "low",
+          reasoning_effort: "minimal",
+          stream: true,
+          max_completion_tokens: 200,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          max_tokens: expect.any(Number),
+        }),
+      );
+    });
+
+    it("should use max_tokens for GPT-4 models in summarize", async () => {
+      const gpt4Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-4o-mini");
+      const mockStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { choices: [{ delta: { content: "Summary" } }] };
+        },
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockStream);
+
+      const longText = "a".repeat(150);
+      const stream = gpt4Provider.summarize(longText, {
+        length: "brief",
+        style: "bullets",
+      });
+
+      const reader = stream.getReader();
+      await reader.read();
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-4o-mini",
+          temperature: 0.3,
+          stream: true,
+          max_tokens: 200,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          max_completion_tokens: expect.any(Number),
+        }),
+      );
+    });
+
+    it("should use max_completion_tokens for GPT-5 models in summarizeComplete", async () => {
+      const gpt5Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-5-nano");
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              content: `**Key Points:**
+• Test point
+
+**TL;DR:** Test summary.`,
+            },
+          },
+        ],
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockResponse);
+
+      const longText = "a".repeat(150);
+      await gpt5Provider.summarizeComplete(longText, {
+        length: "medium",
+        style: "bullets",
+      });
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-5-nano",
+          verbosity: "low",
+          reasoning_effort: "minimal",
+          stream: false,
+          max_completion_tokens: 400,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          max_tokens: expect.any(Number),
+        }),
+      );
+    });
+
+    it("should use max_tokens for GPT-4 models in summarizeComplete", async () => {
+      const gpt4Provider = new OpenAIProvider(MOCK_API_KEY, "gpt-4.1-nano");
+      const mockResponse = {
+        choices: [
+          {
+            message: {
+              content: `**Key Points:**
+• Test point
+
+**TL;DR:** Test summary.`,
+            },
+          },
+        ],
+      };
+
+      mockOpenAIClient.chat.completions.create.mockResolvedValue(mockResponse);
+
+      const longText = "a".repeat(150);
+      await gpt4Provider.summarizeComplete(longText, {
+        length: "medium",
+        style: "plain",
+      });
+
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          model: "gpt-4.1-nano",
+          temperature: 0.3,
+          stream: false,
+          max_tokens: 400,
+        }),
+      );
+      expect(mockOpenAIClient.chat.completions.create).toHaveBeenCalledWith(
+        expect.not.objectContaining({
+          max_completion_tokens: expect.any(Number),
+        }),
+      );
+    });
+
+    it("should handle different GPT-5 model variants", () => {
+      const models: OpenAIModel[] = [
+        "gpt-5-nano" as OpenAIModel,
+        "gpt-5" as OpenAIModel,
+        "gpt-5-turbo" as OpenAIModel,
+      ];
+
+      models.forEach((model) => {
+        const params = OpenAIProvider.getModelParameters(model);
+        expect(params).toEqual({
+          model,
+          verbosity: "low",
+          reasoning_effort: "minimal",
+        });
+        expect(params).not.toHaveProperty("temperature");
+      });
+    });
+
+    it("should handle different GPT-4 model variants", () => {
+      const models: OpenAIModel[] = [
+        "gpt-4o-mini" as OpenAIModel,
+        "gpt-4" as OpenAIModel,
+        "gpt-4-turbo" as OpenAIModel,
+        "gpt-4.1-nano" as OpenAIModel,
+      ];
+
+      models.forEach((model) => {
+        const params = OpenAIProvider.getModelParameters(model);
+        expect(params).toEqual({
+          model,
+          temperature: 0.3,
+        });
+        expect(params).not.toHaveProperty("verbosity");
+        expect(params).not.toHaveProperty("reasoning_effort");
       });
     });
   });

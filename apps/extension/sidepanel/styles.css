@@ -68,6 +68,7 @@
     sans-serif;
   color: var(--text-primary);
   background: var(--bg-secondary);
+  padding: 0;
 }
 
 /* Panel Header */
@@ -161,7 +162,7 @@
 /* Tab Content */
 .tab-content {
   flex: 1;
-  padding: 0.25rem;
+  padding: 0.25rem 0;
   overflow-y: auto;
 }
 
@@ -189,7 +190,7 @@
 
 /* Streaming Summarizer Styles */
 .streaming-summarizer {
-  padding: 0.25rem;
+  padding: 0.25rem 0;
 }
 
 .extraction-status {
@@ -210,7 +211,7 @@
 .controls {
   background: var(--bg-primary);
   border-radius: 8px;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
 }
@@ -277,10 +278,15 @@ button:disabled {
 }
 
 .retry-button {
-  background: #fff;
-  color: #667eea;
-  border: 1px solid #667eea;
+  background: var(--bg-primary);
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
   margin-left: 0.5rem;
+}
+
+.retry-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+  color: white;
 }
 
 /* Summary Container */
@@ -403,13 +409,13 @@ button:disabled {
 
 /* Settings Panel */
 .enhanced-settings {
-  padding: 1rem;
+  padding: 1rem 0;
 }
 
 .settings-section {
   background: var(--bg-primary);
   border-radius: 8px;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   margin-bottom: 1rem;
   box-shadow: var(--shadow-sm);
 }
@@ -535,7 +541,7 @@ button:disabled {
 
 /* Recent List / History Tab Styles */
 .recent-list {
-  padding: 0.25rem;
+  padding: 0.25rem 0;
 }
 
 .recent-list h2 {
@@ -603,7 +609,7 @@ button:disabled {
   -webkit-box-orient: vertical;
 }
 
-.delete-button {
+.document-delete-button {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -624,6 +630,6 @@ button:disabled {
   justify-content: center;
 }
 
-.delete-button:hover {
+.document-delete-button:hover {
   background: var(--error-border);
 }
