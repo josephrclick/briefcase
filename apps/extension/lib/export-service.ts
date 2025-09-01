@@ -321,14 +321,16 @@ export class ExportService {
         markdown += `| URL | ${doc.url} |\n`;
         markdown += `| Domain | ${doc.domain} |\n`;
 
-        if (doc.metadata.author) {
+        if (doc.metadata?.author) {
           markdown += `| Author | ${doc.metadata.author} |\n`;
         }
-        if (doc.metadata.publishedDate) {
+        if (doc.metadata?.publishedDate) {
           markdown += `| Published | ${doc.metadata.publishedDate} |\n`;
         }
-        markdown += `| Word Count | ${doc.metadata.wordCount} |\n`;
-        if (doc.metadata.readingTime) {
+        if (doc.metadata?.wordCount) {
+          markdown += `| Word Count | ${doc.metadata.wordCount} |\n`;
+        }
+        if (doc.metadata?.readingTime) {
           markdown += `| Reading Time | ${doc.metadata.readingTime} min |\n`;
         }
         markdown += `| Created | ${doc.createdAt} |\n`;
@@ -424,10 +426,10 @@ export class ExportService {
           this.escapeCsv(doc.url),
           this.escapeCsv(doc.domain),
           this.escapeCsv(doc.summaryText || ""),
-          this.escapeCsv(doc.metadata.author || ""),
-          this.escapeCsv(doc.metadata.publishedDate || ""),
-          doc.metadata.wordCount.toString(),
-          (doc.metadata.readingTime || "").toString(),
+          this.escapeCsv(doc.metadata?.author || ""),
+          this.escapeCsv(doc.metadata?.publishedDate || ""),
+          (doc.metadata?.wordCount || "").toString(),
+          (doc.metadata?.readingTime || "").toString(),
           this.escapeCsv(doc.summary?.keyPoints?.join("; ") || ""),
           this.escapeCsv(doc.summary?.tldr || ""),
           this.escapeCsv(doc.createdAt),
