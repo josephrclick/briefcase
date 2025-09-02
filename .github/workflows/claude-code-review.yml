@@ -51,7 +51,7 @@ jobs:
           # All Claude CLI arguments including model, max-turns, and allowed tools
           claude_args: |
             --model claude-sonnet-4-20250514
-            --max-turns 20
+            --max-turns 50
             --allowedTools "Read(apps/**)" "Read(packages/**)" "Read(_docs/**)" "Read(*.json)" "mcp__github_ci__get_ci_status"
 
           # Enable sticky comments to update same comment on subsequent pushes
