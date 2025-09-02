@@ -147,26 +147,35 @@ def parse_tsc_output(output: str) -> List[Dict[str, Any]]:
     Parse TypeScript compiler output to extract errors.
     
     Args:
-        output: Raw output from tsc command
+        output: Raw output from tsc command (stderr)
     
     Returns:
         List of parsed error dictionaries
     """
     errors = []
     
-    # TypeScript error format: file(line,column): error TS1234: message
-    error_pattern = r'^(.+?)\((\d+),(\d+)\):\s+error\s+(TS\d+):\s+(.+)$'
+    # TypeScript error format in stderr: file:line:column - error TS1234: message
+    # Also handles: file(line,column): error TS1234: message
+    error_patterns = [
+        # New format: file:line:column - error TS1234: message
+        r'^(.+?):(\d+):(\d+)\s+-\s+error\s+(TS\d+):\s+(.+)$',
+        # Old format: file(line,column): error TS1234: message
+        r'^(.+?)\((\d+),(\d+)\):\s+error\s+(TS\d+):\s+(.+)$'
+    ]
     
     for line in output.split('\n'):
-        match = re.match(error_pattern, line.strip())
-        if match:
-            errors.append({
-                'file': match.group(1),
-                'line': int(match.group(2)),
-                'column': int(match.group(3)),
-                'code': match.group(4),
-                'message': match.group(5)
-            })
+        line = line.strip()
+        for pattern in error_patterns:
+            match = re.match(pattern, line)
+            if match:
+                errors.append({
+                    'file': match.group(1),
+                    'line': int(match.group(2)),
+                    'column': int(match.group(3)),
+                    'code': match.group(4),
+                    'message': match.group(5)
+                })
+                break
     
     return errors
 
@@ -267,15 +276,24 @@ def run_type_check(files: List[str], project_dir: str) -> Tuple[bool, str]:
         )
         
         # TypeScript returns non-zero exit code when there are errors
+        # Note: tsc outputs diagnostics to stderr, not stdout
         if result.returncode != 0:
-            errors = parse_tsc_output(result.stdout)
+            # Parse errors from stderr (where tsc outputs them)
+            errors = parse_tsc_output(result.stderr)
             if errors:
                 error_message = format_errors_for_claude(errors)
                 logger.info(f"Found {len(errors)} TypeScript error(s)")
                 return True, error_message
-            elif result.stderr:
-                # Compilation error (not type error)
-                logger.warning(f"TypeScript compilation issue: {result.stderr}")
+            else:
+                # Check stdout as fallback (shouldn't normally have errors there)
+                errors = parse_tsc_output(result.stdout)
+                if errors:
+                    error_message = format_errors_for_claude(errors)
+                    logger.info(f"Found {len(errors)} TypeScript error(s) in stdout")
+                    return True, error_message
+                
+                # If no parseable errors but still non-zero exit
+                logger.warning(f"TypeScript compilation failed but no errors parsed. stderr: {result.stderr[:500]}")
                 return False, ""
         
         logger.info("TypeScript type check passed")
