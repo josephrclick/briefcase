@@ -16,7 +16,7 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - Document current memory usage during typical operations
   - Create baseline report for comparison after optimization
 
-- [ ] **Prepare OpenAI Provider for Lazy Loading** _(Simplified)_
+- [x] **Prepare OpenAI Provider for Lazy Loading** _(Simplified)_
   - Keep existing OpenAI integration as-is for now
   - Prepare OpenAI SDK imports for dynamic loading
   - Create loading wrapper for OpenAI functionality

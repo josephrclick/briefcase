@@ -1,6 +1,8 @@
 import OpenAI from "openai";
 import { OpenAIModel } from "./settings-service";
 
+// TODO: When adding second provider, move these interfaces to a shared types file
+// These will become the common interface for all summary providers
 export interface SummarizationParams {
   length: "brief" | "medium";
   style: "bullets" | "plain";
@@ -17,6 +19,12 @@ const MIN_INPUT_LENGTH = 100;
 const MAX_RETRIES = 2;
 const BASE_RETRY_DELAY = 1000;
 
+// TODO: When adding second provider, create abstract base class:
+// abstract class SummaryProvider {
+//   abstract summarize(text: string, params: SummarizationParams, signal?: AbortSignal): ReadableStream<string>;
+//   abstract summarizeComplete(text: string, params: SummarizationParams): Promise<SummarizationResult>;
+//   abstract validateApiKey(): Promise<boolean>;
+// }
 export class OpenAIProvider {
   private client: OpenAI;
   private model: OpenAIModel;
