@@ -327,7 +327,7 @@ def main():
             exit_success()
         
         # Extract file paths from tool input
-        file_paths = get_file_paths_from_tool_input(tool_name, tool_input)
+        file_paths = get_file_paths_from_tool_input(tool_input)
         
         if not file_paths:
             logger.debug("No file paths found in tool input")

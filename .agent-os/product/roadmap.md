@@ -32,7 +32,7 @@
 - [x] Recent summaries list - Quick access to last 20 items with search `M`
 - [x] Privacy banner and onboarding - First-use disclosure and feature introduction `S`
 - [x] Retry mechanism for failures - Smart retry with timeout detection `S`
-- [ ] Advanced extraction fallbacks - Custom extractors for edge cases `L`
+- [x] Advanced extraction fallbacks - Custom extractors for edge cases `L`
 - [x] Delete all data functionality - Complete local data removal option `XS`
 - [x] Export summaries feature - Download summaries as JSON/Markdown `S`
 
