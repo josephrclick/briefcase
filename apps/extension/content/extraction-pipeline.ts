@@ -4,6 +4,9 @@ import { SiteExtractorFactory } from "../lib/extraction/registry/site-extractor-
 import { SPADetector } from "../lib/extraction/spa/spa-detector";
 import { DOMAnalyzer } from "../lib/extraction/dom/dom-analyzer";
 
+// TODO: When refactoring, implement IExtractionPipeline from ../lib/extraction/interfaces
+// This will formalize the extraction contract and enable better testing
+
 export interface PipelineOptions {
   timeout?: number;
   minimumContentLength?: number;
@@ -49,6 +52,7 @@ export interface ExtractionAnalytics {
   averageExtractionTime: number;
 }
 
+// TODO: Implement IExtractionPipeline interface when fully migrating to new architecture
 export class ExtractionPipeline {
   private extractor: ContentExtractor;
   private manualSelection: ManualSelectionMode;

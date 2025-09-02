@@ -23,13 +23,13 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - Defer full abstraction layer until second provider is needed
   - Add TODO comments for future provider abstraction points
 
-- [ ] **Split Extraction Logic from Providers**
+- [x] **Split Extraction Logic from Providers**
   - Refactor `extraction-pipeline.ts` to separate core logic from OpenAI-specific code
   - Create abstract extraction interfaces independent of summary providers
   - Establish clear boundaries between extraction, processing, and summarization
   - Update existing extraction tests to use new architecture
 
-- [ ] **Establish Module Boundaries**
+- [x] **Establish Module Boundaries**
   - Define clear interfaces between extraction, providers, and UI layers
   - Create type definitions for cross-module communication
   - Document architectural patterns and module responsibilities
