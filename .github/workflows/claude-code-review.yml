@@ -52,8 +52,8 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-20250514
             --max-turns 30
-            --allowedTools "Read(apps/**),Read(packages/**),Read(_docs/**),Read(*.json),mcp__github_ci__get_ci_status,mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-
+            --allowedTools "Read(apps/**)" "Read(packages/**)" "Read(_docs/**)" "Read(*.json)" "mcp__github_ci__get_ci_status" "mcp__github_inline_comment__create_inline_comment" "Bash(gh pr comment:*)" "Bash(gh pr diff:*)" "Bash(gh pr view:*)"
+            
           # Enable sticky comments to update same comment on subsequent pushes
           use_sticky_comment: true
 
