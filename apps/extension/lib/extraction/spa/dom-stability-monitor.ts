@@ -69,8 +69,8 @@ export class DOMStabilityMonitor {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: function (...args: any[]) {
-          const result = originalPush.apply(this, args);
+        value: function (data: any, unused: string, url?: string | URL | null) {
+          const result = originalPush.apply(this, [data, unused, url]);
           if (navigationCallback) navigationCallback();
           return result;
         },
@@ -80,8 +80,8 @@ export class DOMStabilityMonitor {
         configurable: true,
         enumerable: true,
         writable: true,
-        value: function (...args: any[]) {
-          const result = originalReplace.apply(this, args);
+        value: function (data: any, unused: string, url?: string | URL | null) {
+          const result = originalReplace.apply(this, [data, unused, url]);
           if (navigationCallback) navigationCallback();
           return result;
         },
@@ -119,7 +119,6 @@ export class DOMStabilityMonitor {
       });
 
       // Set up stability check interval
-      let lastCheckTime = Date.now();
       this.checkTimer = setInterval(() => {
         const now = Date.now();
         const timeSinceLastMutation = now - this.lastMutationTime;
@@ -134,7 +133,7 @@ export class DOMStabilityMonitor {
           this.stableWindows = 0;
         }
 
-        lastCheckTime = now;
+        // Track check interval for debugging purposes
       }, checkInterval);
 
       // Set up max wait timer

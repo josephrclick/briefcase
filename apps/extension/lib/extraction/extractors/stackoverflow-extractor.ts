@@ -3,7 +3,7 @@ import type { IContentExtractor, ExtractedContent } from "../types";
 const MINIMUM_CONTENT_LENGTH = 100;
 
 export class StackOverflowExtractor implements IContentExtractor {
-  canHandle(url: string, doc: Document): boolean {
+  canHandle(url: string, _doc: Document): boolean {
     return /stackoverflow\.com\/(questions?|q)\//.test(url);
   }
 
