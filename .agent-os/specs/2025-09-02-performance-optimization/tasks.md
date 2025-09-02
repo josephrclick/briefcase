@@ -37,13 +37,13 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ### Phase 2: Quick Wins - High Impact Lazy Loading
 
-- [ ] **Lazy Load Manual Selection UI** _(Priority: High Impact)_
+- [x] **Lazy Load Manual Selection UI** _(Priority: High Impact)_
   - Split manual selection components from core bundle (rarely used)
   - Implement dynamic loading only when fallback is needed
   - Add lightweight loading indicator
   - Expected impact: ~50-100KB reduction from main bundle
 
-- [ ] **Lazy Load Site-Specific Extractors** _(Priority: High Impact)_
+- [x] **Lazy Load Site-Specific Extractors** _(Priority: High Impact)_
   - Convert GitHub, Reddit, Stack Overflow, Twitter extractors to on-demand loading
   - Load only the extractor needed for current site
   - Keep core extraction logic in main bundle

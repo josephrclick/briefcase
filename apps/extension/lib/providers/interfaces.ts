@@ -9,8 +9,8 @@
  * Summarization parameters
  */
 export interface SummarizationParams {
-  length: "brief" | "medium" | "detailed"?;
-  style: "bullets" | "plain" | "technical"?;
+  length?: "brief" | "medium" | "detailed";
+  style?: "bullets" | "plain" | "technical";
   language?: string;
   customPrompt?: string;
 }
