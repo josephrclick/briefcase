@@ -152,7 +152,7 @@ export class DocumentationExtractor implements IContentExtractor {
     });
 
     const tables = element.querySelectorAll("table");
-    tables.forEach((table) => {
+    tables.forEach((_table) => {
       content.push("[Table content]");
     });
 

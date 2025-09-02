@@ -133,16 +133,33 @@ export class ExtractionPipeline {
         !options.skipSiteSpecific &&
         !options.disabledMethods?.includes("site-specific")
       ) {
-        if (this.siteFactory.canHandle(url)) {
+        const extractor = this.siteFactory.getExtractorForUrl(url, document);
+        if (extractor) {
           try {
-            const result = await this.siteFactory.extract(document, url);
-            if (result.success) {
+            const extractedContent = extractor.extract(document);
+            if (
+              extractedContent &&
+              extractedContent.text.length >=
+                (options.minimumContentLength || 800)
+            ) {
+              const result: ExtractionResult = {
+                success: true,
+                method: "readability" as const,
+                content: {
+                  text: extractedContent.text,
+                  title:
+                    typeof extractedContent.metadata?.title === "string"
+                      ? extractedContent.metadata.title
+                      : undefined,
+                },
+                metadata: extractedContent.metadata,
+              };
               metrics.breakdown!.siteDetection = performance.now() - siteStart;
               metrics.method = "site-specific";
               metrics.extractionTime = performance.now() - startTime;
               this.trackSuccess("site-specific", url);
               this.logExtraction("site-specific", true, metrics);
-              return { ...result, metrics };
+              return { ...result, metrics } as PipelineResult;
             }
           } catch (error) {
             this.logExtraction("site-specific", false, metrics, error as Error);
@@ -153,12 +170,16 @@ export class ExtractionPipeline {
 
       // Stage 2: SPA detection and waiting
       const spaStart = performance.now();
-      let isSPA = false;
-      if (this.spaDetector.isSPA(document)) {
-        isSPA = true;
+      const spaResult = this.spaDetector.detectSPA(document, window);
+      let isSPA = spaResult.isSPA;
+      if (isSPA) {
+        const waitOptions = {
+          timeout: options.spaTimeout || 3000,
+          minStableTime: 500,
+        };
         const waited = await this.spaDetector.waitForContent(
           document,
-          options.spaTimeout,
+          waitOptions,
         );
         if (!waited) {
           this.trackFailure(url, "SPA content timeout");
@@ -194,7 +215,7 @@ export class ExtractionPipeline {
           return {
             ...result,
             metrics,
-            metadata: { ...result.metadata, spa: isSPA },
+            metadata: result.metadata,
           };
         }
       }
@@ -212,24 +233,34 @@ export class ExtractionPipeline {
           return {
             ...readabilityResult,
             metrics,
-            metadata: { ...readabilityResult.metadata, spa: isSPA },
+            metadata: { ...readabilityResult.metadata },
           };
         }
       }
 
       // Try DOM Analysis
       if (!options.disabledMethods?.includes("dom-analysis")) {
-        const domResult = this.domAnalyzer.analyze(document);
-        if (domResult.success) {
+        const domResult = this.domAnalyzer.analyzeContent(document);
+        if (
+          domResult.mainContent &&
+          domResult.mainContent.textContent &&
+          domResult.mainContent.textContent.length >=
+            (options.minimumContentLength || 800)
+        ) {
           metrics.breakdown!.extraction = performance.now() - extractionStart;
           metrics.method = "dom-analysis";
           metrics.extractionTime = performance.now() - startTime;
           this.trackSuccess("dom-analysis", url);
           this.logExtraction("dom-analysis", true, metrics);
           return {
-            ...domResult,
+            success: true,
+            method: "readability" as const,
+            content: {
+              text: domResult.mainContent.textContent,
+              title: undefined,
+            },
             metrics,
-            metadata: { ...domResult.metadata, spa: isSPA },
+            metadata: {},
           };
         }
       }
@@ -246,7 +277,7 @@ export class ExtractionPipeline {
           return {
             ...heuristicResult,
             metrics,
-            metadata: { ...heuristicResult.metadata, spa: isSPA },
+            metadata: { ...heuristicResult.metadata },
           };
         }
       }
@@ -347,18 +378,36 @@ export class ExtractionPipeline {
         return this.extractor.extractWithReadability(document);
       case "heuristic":
         return this.extractor.extractWithHeuristics(document);
-      case "dom-analysis":
-        return this.domAnalyzer.analyze(document);
+      case "dom-analysis": {
+        const domResult = this.domAnalyzer.analyzeContent(document);
+        if (domResult.mainContent) {
+          const text = domResult.mainContent.textContent || "";
+          return {
+            success: text.length > 800,
+            method: "readability" as const,
+            content: {
+              text,
+              title: undefined,
+            },
+            metadata: {},
+          };
+        }
+        return {
+          success: false,
+          method: "readability" as const,
+          error: "No main content found",
+        };
+      }
       default:
         return {
           success: false,
-          method: "readability",
+          method: "readability" as const,
           error: `Unknown extraction method: ${method}`,
         };
     }
   }
 
-  async enableManualSelection(document: Document): Promise<void> {
+  async enableManualSelection(_document: Document): Promise<void> {
     this.manualSelection.activate();
     this.logExtraction(
       "manual",
@@ -369,7 +418,7 @@ export class ExtractionPipeline {
     );
   }
 
-  async completeManualSelection(document: Document): Promise<PipelineResult> {
+  async completeManualSelection(_document: Document): Promise<PipelineResult> {
     const startTime = performance.now();
 
     try {
@@ -385,18 +434,23 @@ export class ExtractionPipeline {
         this.logExtraction("manual", true, metrics);
       }
 
-      return { ...result, metrics };
+      return { ...result, metrics } as PipelineResult;
     } catch (error) {
+      const errorMetrics: PipelineMetrics = {
+        extractionTime: performance.now() - startTime,
+        method: "manual",
+      };
       return {
         success: false,
-        method: "manual",
+        method: "manual" as const,
         error:
           error instanceof Error ? error.message : "Manual selection failed",
+        metrics: errorMetrics,
       };
     }
   }
 
-  private trackSuccess(method: string, url: string): void {
+  private trackSuccess(method: string, _url?: string): void {
     this.analytics.successes++;
     this.analytics.methods[method] = (this.analytics.methods[method] || 0) + 1;
   }

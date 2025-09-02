@@ -495,13 +495,16 @@ export class ManualSelectionMode {
 
   private attachEventHandlers(): void {
     // Click handler
-    const clickHandler = this.handleClick.bind(this);
+    const clickHandler = (event: Event) =>
+      this.handleClick(event as MouseEvent);
     this.document.addEventListener("click", clickHandler, true);
     this.eventHandlers.set("click", clickHandler);
 
     // Mouse events for hover with proper cleanup tracking
-    const mouseEnterHandler = this.handleMouseEnter.bind(this);
-    const mouseLeaveHandler = this.handleMouseLeave.bind(this);
+    const mouseEnterHandler = (event: Event) =>
+      this.handleMouseEnter(event as MouseEvent);
+    const mouseLeaveHandler = (event: Event) =>
+      this.handleMouseLeave(event as MouseEvent);
 
     // Track listeners with WeakMap for proper cleanup
     this.state.highlightableElements.forEach((element) => {
@@ -532,9 +535,12 @@ export class ManualSelectionMode {
     });
 
     // Drag events
-    const mouseDownHandler = this.handleMouseDown.bind(this);
-    const mouseMoveHandler = this.handleMouseMove.bind(this);
-    const mouseUpHandler = this.handleMouseUp.bind(this);
+    const mouseDownHandler = (event: Event) =>
+      this.handleMouseDown(event as MouseEvent);
+    const mouseMoveHandler = (event: Event) =>
+      this.handleMouseMove(event as MouseEvent);
+    const mouseUpHandler = (event: Event) =>
+      this.handleMouseUp(event as MouseEvent);
     this.document.addEventListener("mousedown", mouseDownHandler);
     this.document.addEventListener("mousemove", mouseMoveHandler);
     this.document.addEventListener("mouseup", mouseUpHandler);
@@ -543,7 +549,8 @@ export class ManualSelectionMode {
     this.eventHandlers.set("mouseup", mouseUpHandler);
 
     // Keyboard events
-    const keyDownHandler = this.handleKeyDown.bind(this);
+    const keyDownHandler = (event: Event) =>
+      this.handleKeyDown(event as KeyboardEvent);
     this.document.addEventListener("keydown", keyDownHandler);
     this.eventHandlers.set("keydown", keyDownHandler);
   }
