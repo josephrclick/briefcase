@@ -412,6 +412,10 @@ export class ExtractionPipeline {
     const urls = this.analytics.failures.get(pattern)!;
     if (!urls.includes(url)) {
       urls.push(url);
+      // Limit URLs per pattern to prevent unbounded growth
+      if (urls.length > 100) {
+        urls.shift(); // Remove oldest entry
+      }
     }
   }
 

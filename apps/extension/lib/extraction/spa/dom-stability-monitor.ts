@@ -18,6 +18,8 @@ export class DOMStabilityMonitor {
   private isDestroyed = false;
   private navigationListener: (() => void) | null = null;
   private unloadListener: (() => void) | null = null;
+  private originalPushState: typeof history.pushState | null = null;
+  private originalReplaceState: typeof history.replaceState | null = null;
 
   constructor(private targetElement: HTMLElement | Document = document) {}
 
@@ -54,16 +56,17 @@ export class DOMStabilityMonitor {
       window.addEventListener("beforeunload", this.unloadListener);
 
       // For SPAs, also detect URL changes
-      const originalPushState = history.pushState;
-      const originalReplaceState = history.replaceState;
+      // Store original functions to restore later
+      this.originalPushState = history.pushState;
+      this.originalReplaceState = history.replaceState;
 
       history.pushState = (...args) => {
-        originalPushState.apply(history, args);
+        this.originalPushState!.apply(history, args);
         if (this.navigationListener) this.navigationListener();
       };
 
       history.replaceState = (...args) => {
-        originalReplaceState.apply(history, args);
+        this.originalReplaceState!.apply(history, args);
         if (this.navigationListener) this.navigationListener();
       };
 
@@ -164,6 +167,17 @@ export class DOMStabilityMonitor {
     if (this.unloadListener) {
       window.removeEventListener("beforeunload", this.unloadListener);
       this.unloadListener = null;
+    }
+
+    // Restore original History API functions
+    if (this.originalPushState) {
+      history.pushState = this.originalPushState;
+      this.originalPushState = null;
+    }
+
+    if (this.originalReplaceState) {
+      history.replaceState = this.originalReplaceState;
+      this.originalReplaceState = null;
     }
   }
 

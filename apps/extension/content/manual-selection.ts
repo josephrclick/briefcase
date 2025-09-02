@@ -416,6 +416,55 @@ export class ManualSelectionMode {
   }
 
   private isValidContentElement(element: HTMLElement): boolean {
+    // Reject sensitive elements for security
+    if (
+      element.matches(
+        'input[type="password"], ' +
+          "[data-sensitive], " +
+          ".extension-ui, " +
+          '[contenteditable="true"], ' +
+          'input[type="email"], ' +
+          'input[type="tel"], ' +
+          'input[type="number"], ' +
+          "[data-password], " +
+          "[data-secret], " +
+          "[data-api-key], " +
+          "[data-token]",
+      )
+    ) {
+      return false;
+    }
+
+    // Reject extension UI elements
+    const extensionPrefixes = [
+      "chrome-extension://",
+      "moz-extension://",
+      "extension://",
+    ];
+    const elementId = element.id || "";
+    const elementClass = element.className || "";
+    if (
+      extensionPrefixes.some(
+        (prefix) => elementId.includes(prefix) || elementClass.includes(prefix),
+      )
+    ) {
+      return false;
+    }
+
+    // Reject elements that might contain credentials
+    const textContent = element.textContent || "";
+    const sensitivePatterns = [
+      /api[_-]?key/i,
+      /secret[_-]?key/i,
+      /private[_-]?key/i,
+      /access[_-]?token/i,
+      /bearer\s+[a-z0-9]/i,
+      /password\s*[:=]/i,
+    ];
+    if (sensitivePatterns.some((pattern) => pattern.test(textContent))) {
+      return false;
+    }
+
     // Check if element has meaningful text content
     const text = element.textContent?.trim() || "";
     if (text.length < 20) {
@@ -570,7 +619,7 @@ export class ManualSelectionMode {
     const highlightable = target.closest(
       ".briefcase-highlightable",
     ) as HTMLElement;
-    if (highlightable) {
+    if (highlightable && this.isValidContentElement(highlightable)) {
       event.preventDefault();
       event.stopPropagation();
       this.selectElement(highlightable, event.ctrlKey || event.metaKey);
