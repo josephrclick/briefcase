@@ -47,6 +47,11 @@ export class ManualSelectionMode {
     highlightableElements: [],
   };
   private eventHandlers: Map<string, EventListener> = new Map();
+  private elementListeners: WeakMap<
+    HTMLElement,
+    { enter: EventListener; leave: EventListener }
+  > = new WeakMap();
+  private mutationObserver: MutationObserver | null = null;
   private MINIMUM_CONTENT_LENGTH = 800;
 
   constructor(document: Document = window.document) {
@@ -445,12 +450,36 @@ export class ManualSelectionMode {
     this.document.addEventListener("click", clickHandler, true);
     this.eventHandlers.set("click", clickHandler);
 
-    // Mouse events for hover
+    // Mouse events for hover with proper cleanup tracking
     const mouseEnterHandler = this.handleMouseEnter.bind(this);
     const mouseLeaveHandler = this.handleMouseLeave.bind(this);
+
+    // Track listeners with WeakMap for proper cleanup
     this.state.highlightableElements.forEach((element) => {
+      const listeners = {
+        enter: mouseEnterHandler,
+        leave: mouseLeaveHandler,
+      };
+
+      this.elementListeners.set(element, listeners);
       element.addEventListener("mouseenter", mouseEnterHandler);
       element.addEventListener("mouseleave", mouseLeaveHandler);
+    });
+
+    // Set up MutationObserver to clean up removed elements
+    this.mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.removedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            this.cleanupElementListeners(node);
+          }
+        });
+      });
+    });
+
+    this.mutationObserver.observe(this.document.body, {
+      childList: true,
+      subtree: true,
     });
 
     // Drag events
@@ -476,14 +505,46 @@ export class ManualSelectionMode {
     });
     this.eventHandlers.clear();
 
-    // Remove hover handlers from elements
+    // Remove hover handlers from elements using WeakMap
     this.state.highlightableElements.forEach((element) => {
+      this.cleanupElementListeners(element);
       element.classList.remove(
         "briefcase-highlightable",
         "briefcase-hover",
         "briefcase-selected",
         "briefcase-focused",
       );
+    });
+
+    // Disconnect mutation observer
+    if (this.mutationObserver) {
+      this.mutationObserver.disconnect();
+      this.mutationObserver = null;
+    }
+
+    // Clear the WeakMap references
+    this.elementListeners = new WeakMap();
+  }
+
+  private cleanupElementListeners(element: HTMLElement): void {
+    const listeners = this.elementListeners.get(element);
+    if (listeners) {
+      element.removeEventListener("mouseenter", listeners.enter);
+      element.removeEventListener("mouseleave", listeners.leave);
+      this.elementListeners.delete(element);
+    }
+
+    // Also check child elements
+    const children = element.querySelectorAll(".briefcase-highlightable");
+    children.forEach((child) => {
+      if (child instanceof HTMLElement) {
+        const childListeners = this.elementListeners.get(child);
+        if (childListeners) {
+          child.removeEventListener("mouseenter", childListeners.enter);
+          child.removeEventListener("mouseleave", childListeners.leave);
+          this.elementListeners.delete(child);
+        }
+      }
     });
   }
 

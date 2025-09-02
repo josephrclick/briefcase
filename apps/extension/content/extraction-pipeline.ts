@@ -98,18 +98,35 @@ export class ExtractionPipeline {
 
     this.analytics.attempts++;
 
-    try {
-      // Handle timeout
-      if (options.timeout) {
-        return await this.extractWithTimeout(
-          document,
-          url,
-          options,
-          metrics,
-          startTime,
-        );
-      }
+    // Handle timeout by wrapping the extraction
+    if (options.timeout) {
+      return await this.extractWithTimeout(
+        document,
+        url,
+        options,
+        metrics,
+        startTime,
+      );
+    }
 
+    // Delegate to internal method for actual extraction
+    return await this.extractInternal(
+      document,
+      url,
+      options,
+      metrics,
+      startTime,
+    );
+  }
+
+  private async extractInternal(
+    document: Document,
+    url: string,
+    options: PipelineOptions,
+    metrics: PipelineMetrics,
+    startTime: number,
+  ): Promise<PipelineResult> {
+    try {
       // Stage 1: Site-specific extraction
       const siteStart = performance.now();
       if (
@@ -297,7 +314,14 @@ export class ExtractionPipeline {
         });
       }, options.timeout);
 
-      this.extract(document, url, { ...options, timeout: undefined })
+      // Use internal extraction method to prevent recursion
+      this.extractInternal(
+        document,
+        url,
+        { ...options, timeout: undefined },
+        metrics,
+        startTime,
+      )
         .then((result) => {
           clearTimeout(timeoutId);
           resolve(result);

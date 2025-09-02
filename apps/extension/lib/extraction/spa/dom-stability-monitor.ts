@@ -16,6 +16,8 @@ export class DOMStabilityMonitor {
   private maxWaitTimer: NodeJS.Timeout | null = null;
   private stableWindows = 0;
   private isDestroyed = false;
+  private navigationListener: (() => void) | null = null;
+  private unloadListener: (() => void) | null = null;
 
   constructor(private targetElement: HTMLElement | Document = document) {}
 
@@ -35,6 +37,35 @@ export class DOMStabilityMonitor {
     this.stabilityPromise = new Promise<boolean>((resolve) => {
       this.stabilityResolve = resolve;
       this.stableWindows = 0;
+
+      // Set up navigation detection to cleanup on page change
+      this.navigationListener = () => {
+        console.warn("Page navigation detected during DOM stability check");
+        this.resolveStability(false);
+      };
+
+      this.unloadListener = () => {
+        console.warn("Page unload detected during DOM stability check");
+        this.destroy();
+      };
+
+      // Listen for navigation events
+      window.addEventListener("popstate", this.navigationListener);
+      window.addEventListener("beforeunload", this.unloadListener);
+
+      // For SPAs, also detect URL changes
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+
+      history.pushState = (...args) => {
+        originalPushState.apply(history, args);
+        if (this.navigationListener) this.navigationListener();
+      };
+
+      history.replaceState = (...args) => {
+        originalReplaceState.apply(history, args);
+        if (this.navigationListener) this.navigationListener();
+      };
 
       // Set up mutation observer
       this.observer = new MutationObserver((mutations) => {
@@ -122,6 +153,17 @@ export class DOMStabilityMonitor {
     if (this.maxWaitTimer) {
       clearTimeout(this.maxWaitTimer);
       this.maxWaitTimer = null;
+    }
+
+    // Remove navigation listeners
+    if (this.navigationListener) {
+      window.removeEventListener("popstate", this.navigationListener);
+      this.navigationListener = null;
+    }
+
+    if (this.unloadListener) {
+      window.removeEventListener("beforeunload", this.unloadListener);
+      this.unloadListener = null;
     }
   }
 
