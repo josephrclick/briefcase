@@ -44,7 +44,6 @@ jobs:
       - name: Run Claude Code Review
         id: claude-review
         uses: anthropics/claude-code-action@v1
-        continue-on-error: true
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -53,22 +52,22 @@ jobs:
           claude_args: |
             --model claude-sonnet-4-20250514
             --max-turns 20
-            --allowedTools "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run test)" "Bash(npm run)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(package.json)" "Read(tsconfig.json)" "mcp__github_ci__get_ci_status"
+            --allowedTools "Read(apps/**)" "Read(packages/**)" "Read(_docs/**)" "Read(*.json)" "mcp__github_ci__get_ci_status"
 
           # Enable sticky comments to update same comment on subsequent pushes
           use_sticky_comment: true
 
           # Chrome Extension specific review prompt
           prompt: |
-            Review this Chrome Extension pull request. Keep your review concise and actionable.
-
-            Focus on critical issues only:
-            1. Security vulnerabilities (API keys, XSS, CSP violations)
-            2. Chrome Extension manifest/permissions issues
-            3. Breaking changes or bugs
-            4. Type safety violations
-            5. Missing error handling
-
-            Skip minor style issues unless they impact functionality.
-            Reference specific line numbers.
-            Provide code suggestions for any issues found.
+            Review this Chrome Extension PR focusing on:
+  
+            **High-Impact Issues:**
+            - Security vulnerabilities (XSS, CSP, API exposure)
+            - Chrome Extension compliance (manifest, permissions)
+            - Logic errors and edge cases
+            - Architecture and performance issues
+            - Breaking changes
+            
+            **Assume lint/typecheck passed locally.** 
+            Focus on issues static analysis tools can't catch.
+            Be concise but thorough.
