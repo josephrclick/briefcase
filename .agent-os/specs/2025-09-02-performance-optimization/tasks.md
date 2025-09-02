@@ -9,7 +9,7 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ### Phase 1: Architecture Foundation & Baseline
 
-- [ ] **Establish Performance Baseline**
+- [x] **Establish Performance Baseline**
   - Measure and document current bundle size breakdown by module
   - Record extension startup time (manifest load to UI ready)
   - Capture time to first extraction on sample pages
