@@ -56,19 +56,36 @@ export class DOMStabilityMonitor {
       window.addEventListener("beforeunload", this.unloadListener);
 
       // For SPAs, also detect URL changes
-      // Store original functions to restore later
-      this.originalPushState = history.pushState;
-      this.originalReplaceState = history.replaceState;
+      // Store original functions to restore later - use bind to preserve context
+      this.originalPushState = history.pushState.bind(history);
+      this.originalReplaceState = history.replaceState.bind(history);
 
-      history.pushState = (...args) => {
-        this.originalPushState!.apply(history, args);
-        if (this.navigationListener) this.navigationListener();
-      };
+      // Use Object.defineProperty for safer patching that doesn't pollute the prototype
+      const navigationCallback = this.navigationListener;
+      const originalPush = this.originalPushState;
+      const originalReplace = this.originalReplaceState;
 
-      history.replaceState = (...args) => {
-        this.originalReplaceState!.apply(history, args);
-        if (this.navigationListener) this.navigationListener();
-      };
+      Object.defineProperty(history, "pushState", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: function (...args: any[]) {
+          const result = originalPush.apply(this, args);
+          if (navigationCallback) navigationCallback();
+          return result;
+        },
+      });
+
+      Object.defineProperty(history, "replaceState", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: function (...args: any[]) {
+          const result = originalReplace.apply(this, args);
+          if (navigationCallback) navigationCallback();
+          return result;
+        },
+      });
 
       // Set up mutation observer
       this.observer = new MutationObserver((mutations) => {
@@ -169,14 +186,24 @@ export class DOMStabilityMonitor {
       this.unloadListener = null;
     }
 
-    // Restore original History API functions
+    // Restore original History API functions using Object.defineProperty
     if (this.originalPushState) {
-      history.pushState = this.originalPushState;
+      Object.defineProperty(history, "pushState", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: this.originalPushState,
+      });
       this.originalPushState = null;
     }
 
     if (this.originalReplaceState) {
-      history.replaceState = this.originalReplaceState;
+      Object.defineProperty(history, "replaceState", {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: this.originalReplaceState,
+      });
       this.originalReplaceState = null;
     }
   }

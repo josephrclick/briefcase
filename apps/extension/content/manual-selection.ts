@@ -825,15 +825,28 @@ export class ManualSelectionMode {
     const truncatedContent =
       content.length > 400 ? content.substring(0, 400) + "..." : content;
 
-    this.preview.innerHTML = `
-      <div class="briefcase-preview-text">${this.escapeHtml(truncatedContent)}</div>
-      <div class="briefcase-char-count">${charCount} characters</div>
-      ${
-        charCount < this.MINIMUM_CONTENT_LENGTH
-          ? `<div class="briefcase-warning">Minimum ${this.MINIMUM_CONTENT_LENGTH} characters required</div>`
-          : ""
-      }
-    `;
+    // Clear existing content safely
+    while (this.preview.firstChild) {
+      this.preview.removeChild(this.preview.firstChild);
+    }
+
+    // Create elements using DOM methods to prevent XSS
+    const previewText = this.document.createElement("div");
+    previewText.className = "briefcase-preview-text";
+    previewText.textContent = truncatedContent;
+    this.preview.appendChild(previewText);
+
+    const charCountDiv = this.document.createElement("div");
+    charCountDiv.className = "briefcase-char-count";
+    charCountDiv.textContent = `${charCount} characters`;
+    this.preview.appendChild(charCountDiv);
+
+    if (charCount < this.MINIMUM_CONTENT_LENGTH) {
+      const warning = this.document.createElement("div");
+      warning.className = "briefcase-warning";
+      warning.textContent = `Minimum ${this.MINIMUM_CONTENT_LENGTH} characters required`;
+      this.preview.appendChild(warning);
+    }
   }
 
   private updateToolbar(): void {
@@ -854,7 +867,24 @@ export class ManualSelectionMode {
     const content = this.getSelectedContent();
     const isValid = content.length >= this.MINIMUM_CONTENT_LENGTH;
 
-    this.toolbar.innerHTML = `<button class="briefcase-confirm-btn" ${!isValid ? "disabled" : ""}>Confirm Selection</button><button class="briefcase-cancel-btn">Cancel</button>`;
+    // Clear existing content safely
+    while (this.toolbar.firstChild) {
+      this.toolbar.removeChild(this.toolbar.firstChild);
+    }
+
+    // Create buttons using DOM methods to prevent XSS
+    const confirmBtn = this.document.createElement("button");
+    confirmBtn.className = "briefcase-confirm-btn";
+    confirmBtn.textContent = "Confirm Selection";
+    if (!isValid) {
+      confirmBtn.setAttribute("disabled", "true");
+    }
+    this.toolbar.appendChild(confirmBtn);
+
+    const cancelBtn = this.document.createElement("button");
+    cancelBtn.className = "briefcase-cancel-btn";
+    cancelBtn.textContent = "Cancel";
+    this.toolbar.appendChild(cancelBtn);
   }
 
   private showNoContentWarning(): void {
@@ -914,11 +944,7 @@ export class ManualSelectionMode {
     return htmlParts.join("\n");
   }
 
-  private escapeHtml(text: string): string {
-    const div = this.document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  // Removed escapeHtml method - no longer needed with DOM methods
 
   private handleConfirm(): void {
     try {
