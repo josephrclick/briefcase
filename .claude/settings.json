@@ -54,6 +54,16 @@
             "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/PostToolUse/prettier_format.py"
           }
         ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/.claude/hooks/PostToolUse/typescript_check.py",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
