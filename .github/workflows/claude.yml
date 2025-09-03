@@ -17,36 +17,67 @@ jobs:
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+    
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
+      pull-requests: write  # ✅ Changed to 'write' for posting responses
+      issues: write         # ✅ Changed to 'write' for issue responses  
       id-token: write
-      actions: read # Required for Claude to read CI results on PRs
+      actions: read
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0  # ✅ Changed to full history for better context
+
+      - name: Setup Node.js  # ✅ Added for proper npm command support
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'apps/extension/package-lock.json'
+
+      - name: Install dependencies  # ✅ Added to prevent npm failures
+        run: |
+          cd apps/extension
+          npm install
 
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-
-          # Set model, max turns, and allowed tools via claude_args
           claude_args: |
-            --model claude-sonnet-4-1-20250805
-            --max-turns 15
-            --allowedTools "Bash(npm install)" "Bash(npm run build)" "Bash(npm run test)" "Bash(npm run lint)" "Bash(npm run typecheck)" "Bash(npm run format:fix)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(*.json)" "Read(tsconfig.json)" "Read(.github/**)" "Write" "Edit" "MultiEdit"
+            --model claude-sonnet-4-20250514
+            --max-turns 30
+            --allowedTools "Bash(cd apps/extension && npm run build)" "Bash(cd apps/extension && npm run test)" "Bash(cd apps/extension && npm run lint)" "Bash(cd apps/extension && npm run typecheck)" "Read(packages/**)" "Read(apps/**)" "Read(_docs/**)" "Read(*.md)" "Read(*.json)" "Read(.github/**)" "Write" "Edit" "MultiEdit" "mcp__github_ci__get_ci_status"
 
-          # Concise instructions for interactive assistance
           prompt: |
-            You're helping with Briefcase, a Chrome Extension (MV3) project.
-            - Check CLAUDE.md for project conventions
-            - Follow TypeScript/React best practices
-            - Run lint and typecheck after changes
-            - Provide concise, actionable responses
-            - Focus on solving the specific request
+            You're Claude, an AI assistant helping with the Briefcase Chrome Extension (MV3) project.
+            
+            **Context & Capabilities:**
+            - You can read/write files, run tests, and make code changes
+            - Check CLAUDE.md for project conventions and patterns
+            - Focus on TypeScript/React/Chrome Extension best practices
+            - Always run lint/typecheck after making changes
+            
+            **Communication Style:**
+            - Be conversational and helpful 
+            - Provide actionable solutions with code examples
+            - Explain your reasoning briefly
+            - Ask clarifying questions when needed
+            
+            **For Code Tasks:**
+            - Show before/after diffs when making changes
+            - Test your changes when possible
+            - Follow existing code patterns and naming conventions
+            - Consider security implications for Chrome Extension code
+            
+            **For Questions/Reviews:**
+            - Reference specific files and line numbers
+            - Suggest concrete improvements
+            - Explain trade-offs and alternatives when relevant
+            
+            The user has mentioned you with @claude - respond directly to their request!
