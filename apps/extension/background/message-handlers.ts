@@ -18,6 +18,8 @@ export class MessageHandlers {
   private abortControllers: Map<number, AbortController> = new Map();
   private activeStreams: Map<number, ReadableStreamDefaultReader<string>> =
     new Map();
+  // Track request IDs to handle concurrent requests properly
+  private requestIds: Map<number, string> = new Map();
 
   constructor() {
     this.initialize();
@@ -38,6 +40,7 @@ export class MessageHandlers {
     }
     this.abortControllers.clear();
     this.activeStreams.clear();
+    this.requestIds.clear();
   }
 
   private handleMessageWrapper(
@@ -122,6 +125,9 @@ export class MessageHandlers {
     tabId: number,
     sendResponse: (response: any) => void,
   ) {
+    // Generate unique request ID to handle concurrent requests
+    const requestId = `${tabId}-${Date.now()}-${Math.random()}`;
+
     try {
       const provider = await SettingsService.getProvider();
 
@@ -137,7 +143,12 @@ export class MessageHandlers {
       const existingController = this.abortControllers.get(tabId);
       if (existingController) {
         existingController.abort();
+        // Wait for cleanup to complete to avoid race conditions
+        await new Promise((resolve) => setTimeout(resolve, 10));
       }
+
+      // Store the new request ID
+      this.requestIds.set(tabId, requestId);
 
       // Create new abort controller
       const abortController = new AbortController();
@@ -162,18 +173,31 @@ export class MessageHandlers {
         this.activeStreams.set(tabId, reader);
 
         while (true) {
+          // Check if this request is still the active one for this tab
+          if (this.requestIds.get(tabId) !== requestId) {
+            // This request has been superseded, clean up and exit
+            reader.cancel();
+            break;
+          }
+
           const { done, value } = await reader.read();
 
           if (done) {
-            sendResponse({ type: "STREAM_COMPLETE" });
+            // Only send complete if this is still the active request
+            if (this.requestIds.get(tabId) === requestId) {
+              sendResponse({ type: "STREAM_COMPLETE" });
+            }
             break;
           }
 
           if (value) {
-            sendResponse({
-              type: "STREAM_TOKEN",
-              data: value,
-            });
+            // Only send tokens if this is still the active request
+            if (this.requestIds.get(tabId) === requestId) {
+              sendResponse({
+                type: "STREAM_TOKEN",
+                data: value,
+              });
+            }
           }
         }
       } catch (error: any) {
@@ -186,8 +210,12 @@ export class MessageHandlers {
           });
         }
       } finally {
-        this.abortControllers.delete(tabId);
-        this.activeStreams.delete(tabId);
+        // Only clean up if this is still the active request for this tab
+        if (this.requestIds.get(tabId) === requestId) {
+          this.abortControllers.delete(tabId);
+          this.activeStreams.delete(tabId);
+          this.requestIds.delete(tabId);
+        }
       }
     } catch (error: any) {
       sendResponse({
