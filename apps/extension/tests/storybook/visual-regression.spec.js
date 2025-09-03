@@ -26,7 +26,7 @@ test.describe('Visual Regression Testing', () => {
       // AI can analyze these screenshots for:
       // - Layout consistency
       // - Color accuracy  
-      - Spacing correctness
+      // - Spacing correctness
       // - Text readability
     });
   }

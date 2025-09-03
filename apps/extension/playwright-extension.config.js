@@ -59,8 +59,8 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      command: 'npm run build',
-      port: 5173,
+      command: 'npm run preview',
+      port: 4173,
       reuseExistingServer: !process.env.CI,
     },
   ],

@@ -22,7 +22,7 @@ npm install --save-dev \
 
 # Install Arco Design for professional components
 echo "📦 Installing Arco Design System..."
-npm install @arco-design/web-react @arco-design/web-react/dist/css/arco.css
+npm install @arco-design/web-react
 
 # Create Storybook configuration
 echo "⚙️ Creating Storybook configuration..."
