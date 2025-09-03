@@ -34,7 +34,9 @@ body {
   line-height: 1.5;
   color: var(--text-primary);
   background: var(--background);
-  width: 320px;
+  width: 100%;
+  min-width: 320px;
+  max-width: 500px;
   overflow-x: hidden;
 }
 
@@ -43,7 +45,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  width: 320px;
+  width: 100%;
+  min-width: 320px;
+  max-width: 500px;
 }
 
 /* Header */
@@ -98,7 +102,10 @@ body {
 .main {
   flex: 1;
   padding: var(--spacing-md);
+  padding-right: var(--spacing-md); /* Ensure right padding extends to edge */
   overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Form Controls */
@@ -184,6 +191,18 @@ button.secondary {
 
 button.secondary:hover:not(:disabled) {
   background: #e8eaed;
+}
+
+/* Dark mode improvements for secondary buttons */
+[data-theme="dark"] button.secondary {
+  background: #404040;
+  color: #e0e0e0;
+  border: 1px solid #606060;
+}
+
+[data-theme="dark"] button.secondary:hover:not(:disabled) {
+  background: #505050;
+  color: #ffffff;
 }
 
 .button-group {
@@ -518,6 +537,25 @@ button.secondary:hover:not(:disabled) {
   body,
   .app {
     width: 100%;
-    max-width: 400px;
+    max-width: 500px;
   }
+}
+
+/* Additional improvements for alignment */
+.privacy-banner {
+  margin-left: var(--spacing-md);
+  margin-right: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Ensure all main content areas have consistent padding */
+.summarizer h2,
+.settings h2,
+.recent-list h2,
+.document-viewer h2 {
+  font-size: 16px;
+  margin-bottom: var(--spacing-md);
+  margin-left: 0; /* Remove any left margin that pushes content away from edge */
+  padding-left: 0;
+  color: var(--text-primary);
 }

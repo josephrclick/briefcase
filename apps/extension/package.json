@@ -15,7 +15,15 @@
     "analyze:bundle": "npm run build && node scripts/measure-bundle.js",
     "analyze:visualize": "npm run build && open dist/bundle-stats.html",
     "build:no-optimization": "tsc && vite build --mode development",
-    "check:bundle-size": "node scripts/bundle-size-check.js"
+    "check:bundle-size": "node scripts/bundle-size-check.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test:extension": "playwright test -c playwright-extension.config.js",
+    "test:ai": "playwright test -c playwright-extension.config.js --project=storybook-validation",
+    "test:visual": "playwright test -c playwright-extension.config.js tests/storybook/visual-regression.spec.js",
+    "test:ai-fixes": "playwright test -c playwright-extension.config.js tests/ai-agent/automated-fixes.spec.js",
+    "ui:setup": "chmod +x setup-ui-workflow.sh && ./setup-ui-workflow.sh",
+    "ui:dev": "concurrently \"npm run storybook\" \"npm run dev\""
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
