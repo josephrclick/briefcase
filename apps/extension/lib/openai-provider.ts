@@ -26,10 +26,23 @@ const BASE_RETRY_DELAY = 1000;
 //   abstract validateApiKey(): Promise<boolean>;
 // }
 export class OpenAIProvider {
-  private client: OpenAI;
-  private model: OpenAIModel;
+  private client: OpenAI | null = null;
+  private model: OpenAIModel = "gpt-4o-mini";
 
-  constructor(apiKey: string, model?: OpenAIModel) {
+  constructor(apiKey?: string, model?: OpenAIModel) {
+    // Allow construction without API key for safer lazy loading
+    if (apiKey) {
+      this.initialize(apiKey, model);
+    } else {
+      this.model = model || "gpt-4o-mini";
+    }
+  }
+
+  /**
+   * Initialize the provider with API key
+   * Separated from constructor to prevent API key exposure during dynamic imports
+   */
+  initialize(apiKey: string, model?: OpenAIModel) {
     if (!apiKey) {
       throw new Error("API key is required");
     }
@@ -50,7 +63,17 @@ export class OpenAIProvider {
       dangerouslyAllowBrowser: true,
     });
 
-    this.model = model || "gpt-4o-mini";
+    if (model) {
+      this.model = model;
+    }
+  }
+
+  private ensureInitialized() {
+    if (!this.client) {
+      throw new Error(
+        "OpenAI provider not initialized. Call initialize() first.",
+      );
+    }
   }
 
   static getModelParameters(model?: OpenAIModel): Record<string, any> {
@@ -186,7 +209,8 @@ Be accurate, clear, and focus on the most important information.`;
             ? { max_completion_tokens: maxTokens }
             : { max_tokens: maxTokens };
 
-          const stream = await this.client.chat.completions.create({
+          this.ensureInitialized();
+          const stream = await this.client!.chat.completions.create({
             model: modelParams.model,
             ...modelParams,
             messages: [
@@ -236,7 +260,8 @@ Be accurate, clear, and focus on the most important information.`;
         ? { max_completion_tokens: maxTokens }
         : { max_tokens: maxTokens };
 
-      return await this.client.chat.completions.create({
+      this.ensureInitialized();
+      return await this.client!.chat.completions.create({
         model: modelParams.model,
         ...modelParams,
         messages: [
@@ -264,7 +289,8 @@ Be accurate, clear, and focus on the most important information.`;
   async validateApiKey(): Promise<boolean> {
     try {
       // Test the API key by listing models
-      const response = await this.client.models.list();
+      this.ensureInitialized();
+      const response = await this.client!.models.list();
       return !!response.data;
     } catch (error: any) {
       console.error("API key validation failed:", error);

@@ -48,9 +48,29 @@ export class MessageHandlers {
     // Handle async messages
     this.handleMessage(message, sender, sendResponse).catch((error) => {
       console.error("Message handler error:", error);
+
+      // Sanitize error message to prevent leaking sensitive information
+      let safeErrorMessage = "Unknown error";
+      if (error instanceof Error) {
+        // Remove any API keys or sensitive patterns from error messages
+        safeErrorMessage = error.message
+          .replace(/sk-[A-Za-z0-9_\-\.]+/g, "sk-***") // OpenAI API keys
+          .replace(/Bearer [A-Za-z0-9_\-\.]+/g, "Bearer ***") // Bearer tokens
+          .replace(/apiKey"?:\s*"[^"]+"/g, 'apiKey: "***"') // API key in JSON
+          .replace(
+            /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+            "***@***.***",
+          ); // Email addresses
+
+        // Limit error message length to prevent overly verbose errors
+        if (safeErrorMessage.length > 200) {
+          safeErrorMessage = safeErrorMessage.substring(0, 197) + "...";
+        }
+      }
+
       sendResponse({
         type: "ERROR",
-        error: error.message || "Unknown error",
+        error: safeErrorMessage,
       });
     });
 

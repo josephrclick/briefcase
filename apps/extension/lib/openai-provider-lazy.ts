@@ -55,11 +55,19 @@ export class LazyOpenAIProvider {
           "./openai-provider"
         );
 
-        this.provider = new OpenAIProvider(this.apiKey, this.model);
+        // Create provider without API key first to prevent exposure during import
+        this.provider = new OpenAIProvider();
+        // Initialize with API key after successful import
+        this.provider.initialize(this.apiKey, this.model);
         return this.provider;
       } catch (error) {
         this.loadingPromise = null;
-        throw new Error(`Failed to load OpenAI provider: ${error}`);
+        // Sanitize error message to prevent API key exposure
+        const safeError =
+          error instanceof Error ? error.message : "Unknown error";
+        throw new Error(
+          `Failed to load OpenAI provider: ${safeError.replace(/sk-[A-Za-z0-9_\-\.]+/g, "sk-***")}`,
+        );
       }
     })();
 
