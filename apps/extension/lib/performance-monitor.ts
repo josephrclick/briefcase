@@ -228,14 +228,14 @@ export class PerformanceMonitor {
    * Get performance summary
    */
   getSummary(): {
-    averages: Partial<PerformanceMetrics>;
+    averages: Record<string, number>;
     recent: PerformanceMetrics[];
     issues: string[];
   } {
     const recent = this.metrics.slice(-10);
 
     // Calculate averages
-    const averages: Partial<PerformanceMetrics> = {};
+    const averages: Record<string, number> = {};
     const metricKeys: (keyof PerformanceMetrics)[] = [
       "startupTime",
       "extractionTime",

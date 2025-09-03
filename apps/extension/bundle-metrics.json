@@ -1,0 +1,19 @@
+{
+  "timestamp": "2025-09-03T00:21:58.463Z",
+  "totalSize": 212749,
+  "bundles": {
+    "content-script": 43690,
+    "service-worker": 1387,
+    "sidepanel": 44969
+  },
+  "baseline": {
+    "mainBundle": 61800,
+    "totalSize": 500000,
+    "criticalBundles": {
+      "sidepanel": 45000,
+      "content-script": 44000,
+      "service-worker": 2000
+    }
+  },
+  "increase": -0.574502
+}

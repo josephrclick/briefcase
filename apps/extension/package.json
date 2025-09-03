@@ -13,15 +13,14 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "analyze:bundle": "npm run build && node scripts/measure-bundle.js",
-    "analyze:visualize": "npm run build && open dist/bundle-stats.html"
+    "analyze:visualize": "npm run build && open dist/bundle-stats.html",
+    "build:no-optimization": "tsc && vite build --mode development",
+    "check:bundle-size": "node scripts/bundle-size-check.js"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "clsx": "^2.1.1",
     "openai": "^4.104.0",
-    "preact": "^10.19.3",
-    "react-hot-toast": "^2.6.0"
+    "preact": "^10.19.3"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.0-beta.23",
