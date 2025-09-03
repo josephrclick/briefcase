@@ -1,5 +1,5 @@
 import { SettingsService, SettingsData } from "../lib/settings-service";
-import { OpenAIProvider } from "../lib/openai-provider";
+import { LazyOpenAIProvider } from "../lib/openai-provider-lazy";
 
 export interface Message {
   type: string;
@@ -234,7 +234,7 @@ export class MessageHandlers {
     sendResponse: (response: any) => void,
   ) {
     try {
-      const provider = new OpenAIProvider(data.apiKey);
+      const provider = new LazyOpenAIProvider(data.apiKey);
       const valid = await provider.validateApiKey();
       sendResponse({
         type: "API_KEY_VALID",

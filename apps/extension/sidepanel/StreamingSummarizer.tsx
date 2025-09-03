@@ -5,7 +5,7 @@ import {
   SettingsService,
   SummarizationSettings,
 } from "../lib/settings-service";
-import { OpenAIProvider } from "../lib/openai-provider";
+import { LazyOpenAIProvider } from "../lib/openai-provider-lazy";
 
 interface StreamingSummarizerProps {
   extractedText: string;
@@ -41,7 +41,7 @@ export const StreamingSummarizer: FunctionalComponent<
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [provider, setProvider] = useState<OpenAIProvider | null>(null);
+  const [provider, setProvider] = useState<LazyOpenAIProvider | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamReaderRef = useRef<ReadableStreamDefaultReader<string> | null>(

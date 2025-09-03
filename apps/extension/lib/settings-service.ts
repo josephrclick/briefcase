@@ -1,4 +1,4 @@
-import { OpenAIProvider } from "./openai-provider";
+import { LazyOpenAIProvider } from "./openai-provider-lazy";
 
 export interface SummarizationSettings {
   length: "brief" | "medium";
@@ -116,7 +116,7 @@ export class SettingsService {
     }
 
     try {
-      const provider = new OpenAIProvider(apiKey);
+      const provider = new LazyOpenAIProvider(apiKey);
       const isValid = await provider.validateApiKey();
 
       if (isValid) {
@@ -148,11 +148,14 @@ export class SettingsService {
   /**
    * Get a configured OpenAI provider instance
    */
-  static async getProvider(): Promise<OpenAIProvider | null> {
+  static async getProvider(): Promise<LazyOpenAIProvider | null> {
     const settings = await this.loadSettings();
     if (!settings.openaiApiKey) {
       return null;
     }
-    return new OpenAIProvider(settings.openaiApiKey, settings.selectedModel);
+    return new LazyOpenAIProvider(
+      settings.openaiApiKey,
+      settings.selectedModel,
+    );
   }
 }

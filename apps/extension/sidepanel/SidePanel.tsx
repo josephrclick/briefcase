@@ -1,9 +1,9 @@
 import { FunctionalComponent } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
 import { StreamingSummarizer } from "./StreamingSummarizer";
-import { EnhancedSettings } from "./EnhancedSettings";
+import { LazyEnhancedSettings } from "./LazyEnhancedSettings";
 import { RecentList } from "./RecentList";
-import { DocumentViewer } from "./DocumentViewer";
+import { LazyDocumentViewer } from "./LazyDocumentViewer";
 
 // DocumentViewer expects this format
 interface ViewerDocument {
@@ -587,9 +587,9 @@ export const SidePanel: FunctionalComponent = () => {
         {activeTab === "history" && (
           <div role="tabpanel" aria-label="History">
             {viewingDocument ? (
-              <DocumentViewer
+              <LazyDocumentViewer
                 document={viewingDocument}
-                onBack={() => setViewingDocument(null)}
+                onClose={() => setViewingDocument(null)}
               />
             ) : (
               <RecentList
@@ -611,7 +611,7 @@ export const SidePanel: FunctionalComponent = () => {
 
         {activeTab === "settings" && (
           <div role="tabpanel" aria-label="Settings">
-            <EnhancedSettings onSettingsUpdate={handleSettingsUpdate} />
+            <LazyEnhancedSettings onSettingsUpdate={handleSettingsUpdate} />
           </div>
         )}
       </div>
