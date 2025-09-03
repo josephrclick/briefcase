@@ -128,8 +128,12 @@ export class ContentExtractor {
     let normalized = textContent;
 
     if (htmlContent && !textContent.includes("```")) {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = htmlContent;
+      // Use DOMParser instead of innerHTML to prevent XSS
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, "text/html");
+
+      // DOMParser automatically sanitizes by not executing scripts
+      const tempDiv = doc.body;
 
       const codeBlocks = tempDiv.querySelectorAll("pre code, pre");
       codeBlocks.forEach((block) => {

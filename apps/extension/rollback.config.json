@@ -1,0 +1,39 @@
+{
+  "featureFlags": {
+    "lazyLoading": {
+      "enabled": true,
+      "description": "Enable lazy loading for non-critical components",
+      "components": {
+        "openaiProvider": true,
+        "enhancedSettings": true,
+        "documentViewer": true,
+        "siteExtractors": true,
+        "manualSelection": true
+      }
+    },
+    "performanceMonitoring": {
+      "enabled": true,
+      "description": "Track performance metrics and thresholds",
+      "thresholds": {
+        "startupTime": 1000,
+        "extractionTime": 3000,
+        "summarizationTime": 1000,
+        "memoryUsage": 50
+      }
+    },
+    "bundleOptimization": {
+      "enabled": true,
+      "description": "Enable aggressive bundle optimization",
+      "targetSize": 500000,
+      "chunkSplitting": true,
+      "treeshaking": true
+    }
+  },
+  "rollbackProcedures": {
+    "quickDisable": "Set all feature flags to false in this file",
+    "fullRevert": "git checkout <previous-commit> -- apps/extension/",
+    "buildWithoutOptimization": "npm run build:no-optimization"
+  },
+  "version": "1.0.0",
+  "lastUpdated": "2025-09-02"
+}

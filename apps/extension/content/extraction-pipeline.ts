@@ -1,8 +1,14 @@
 import { ContentExtractor, ExtractionResult } from "./extractor";
-import { ManualSelectionMode } from "./manual-selection";
-import { SiteExtractorFactory } from "../lib/extraction/registry/site-extractor-factory";
+import { LazySiteExtractorFactory } from "../lib/extraction/registry/site-extractor-factory-lazy";
 import { SPADetector } from "../lib/extraction/spa/spa-detector";
 import { DOMAnalyzer } from "../lib/extraction/dom/dom-analyzer";
+
+// Lazy load ManualSelectionMode - only loaded when manual selection is needed
+// This saves ~50-100KB from the main bundle since manual selection is rarely used
+type ManualSelectionMode = import("./manual-selection").ManualSelectionMode;
+
+// TODO: When refactoring, implement IExtractionPipeline from ../lib/extraction/interfaces
+// This will formalize the extraction contract and enable better testing
 
 export interface PipelineOptions {
   timeout?: number;
@@ -49,10 +55,12 @@ export interface ExtractionAnalytics {
   averageExtractionTime: number;
 }
 
+// TODO: Implement IExtractionPipeline interface when fully migrating to new architecture
 export class ExtractionPipeline {
   private extractor: ContentExtractor;
-  private manualSelection: ManualSelectionMode;
-  private siteFactory: SiteExtractorFactory;
+  private manualSelection: ManualSelectionMode | null = null;
+  private manualSelectionLoading: Promise<ManualSelectionMode> | null = null;
+  private siteFactory: LazySiteExtractorFactory;
   private spaDetector: SPADetector;
   private domAnalyzer: DOMAnalyzer;
 
@@ -73,10 +81,46 @@ export class ExtractionPipeline {
 
   constructor() {
     this.extractor = new ContentExtractor();
-    this.manualSelection = new ManualSelectionMode();
-    this.siteFactory = new SiteExtractorFactory();
+    // Manual selection will be lazy loaded when needed
+    this.siteFactory = LazySiteExtractorFactory.create();
     this.spaDetector = new SPADetector();
     this.domAnalyzer = new DOMAnalyzer();
+  }
+
+  /**
+   * Lazy load the ManualSelectionMode component
+   * Uses singleton pattern to prevent multiple loads
+   */
+  private async loadManualSelection(): Promise<ManualSelectionMode> {
+    if (this.manualSelection) {
+      return this.manualSelection;
+    }
+
+    if (this.manualSelectionLoading) {
+      return this.manualSelectionLoading;
+    }
+
+    this.manualSelectionLoading = (async () => {
+      try {
+        console.log("[ExtractionPipeline] Loading manual selection UI...");
+        const { ManualSelectionMode } = await import(
+          /* webpackChunkName: "manual-selection" */
+          "./manual-selection"
+        );
+        this.manualSelection = new ManualSelectionMode();
+        console.log("[ExtractionPipeline] Manual selection UI loaded");
+        return this.manualSelection;
+      } catch (error) {
+        console.error(
+          "[ExtractionPipeline] Failed to load manual selection:",
+          error,
+        );
+        this.manualSelectionLoading = null;
+        throw error;
+      }
+    })();
+
+    return this.manualSelectionLoading;
   }
 
   async extract(
@@ -133,7 +177,10 @@ export class ExtractionPipeline {
         !options.skipSiteSpecific &&
         !options.disabledMethods?.includes("site-specific")
       ) {
-        const extractor = this.siteFactory.getExtractorForUrl(url, document);
+        const extractor = await this.siteFactory.getExtractorForUrl(
+          url,
+          document,
+        );
         if (extractor) {
           try {
             const extractedContent = extractor.extract(document);
@@ -408,7 +455,8 @@ export class ExtractionPipeline {
   }
 
   async enableManualSelection(_document: Document): Promise<void> {
-    this.manualSelection.activate();
+    const manualSelection = await this.loadManualSelection();
+    manualSelection.activate();
     this.logExtraction(
       "manual",
       false,
@@ -422,6 +470,9 @@ export class ExtractionPipeline {
     const startTime = performance.now();
 
     try {
+      if (!this.manualSelection) {
+        throw new Error("Manual selection not initialized");
+      }
       const result = this.manualSelection.getExtractionResult();
 
       const metrics: PipelineMetrics = {

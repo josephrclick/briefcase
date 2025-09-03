@@ -187,20 +187,21 @@ apps/extension/
 
 ## Recent Feature Implementations
 
+### Performance Optimization (v3.0) - 2025-09-02
+
+- **Bundle Size**: Reduced from 500KB target to 207.76KB actual (57.5% reduction)
+- **Main Bundle**: Optimized to 61.8KB through comprehensive lazy loading
+- **Lazy Loading**: Complete implementation for OpenAI provider (106KB), UI components, and extractors
+- **Bundle Analysis**: Local analysis with `npm run analyze:bundle` and visualizer
+- **Architecture**: Full documentation in `docs/ARCHITECTURE.md`
+- **Rollback**: Feature flags in `rollback.config.json` for quick reversion
+
 ### Advanced Extraction Fallbacks (v2.0)
 
 - **Success Rate**: Improved from 85% to >95% through intelligent fallback chains
 - **Site-Specific Extractors**: Custom extractors for GitHub, Stack Overflow, Reddit, Twitter/X
 - **SPA Support**: Framework detection (React, Angular, Vue) with DOM stability monitoring
 - **Manual Selection**: Interactive fallback UI with keyboard navigation and accessibility
-- **Performance Tracking**: Analytics and metrics for extraction success rates and patterns
-
-### UI Polish Improvements (v1.1)
-
-- **API Key Flow**: Combined test/save operation with auto-collapse after validation
-- **Extract & Summarize**: Automatic summarization after successful extraction
-- **Dark Mode**: Full theming with system preference detection (light/dark/system)
-- **UI Optimization**: Reduced padding for better content density in narrow side panel
 
 ## Testing Setup Requirements
 

@@ -78,10 +78,28 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
       }
     } catch (error) {
       console.error("Error handling message:", error);
+
+      // Sanitize error message to prevent leaking sensitive information
+      let safeErrorMessage = "Unknown error occurred";
+      if (error instanceof Error) {
+        safeErrorMessage = error.message
+          .replace(/sk-[A-Za-z0-9_\-\.]+/g, "sk-***") // OpenAI API keys
+          .replace(/Bearer [A-Za-z0-9_\-\.]+/g, "Bearer ***") // Bearer tokens
+          .replace(/apiKey"?:\s*"[^"]+"/g, 'apiKey: "***"') // API key in JSON
+          .replace(
+            /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+            "***@***.***",
+          ); // Email addresses
+
+        // Limit error message length
+        if (safeErrorMessage.length > 200) {
+          safeErrorMessage = safeErrorMessage.substring(0, 197) + "...";
+        }
+      }
+
       const errorResponse: ExtensionResponse = {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
+        error: safeErrorMessage,
       };
       sendResponse(errorResponse);
     }

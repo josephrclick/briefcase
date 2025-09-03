@@ -47,11 +47,13 @@ describe("OpenAIProvider", () => {
     });
 
     it("should throw error if API key is empty", () => {
-      expect(() => new OpenAIProvider("")).toThrow("API key is required");
+      const provider = new OpenAIProvider();
+      expect(() => provider.initialize("")).toThrow("API key is required");
     });
 
     it("should throw error if API key is invalid format", () => {
-      expect(() => new OpenAIProvider("invalid-key")).toThrow(
+      const provider = new OpenAIProvider();
+      expect(() => provider.initialize("invalid-key")).toThrow(
         "Invalid API key format",
       );
     });
