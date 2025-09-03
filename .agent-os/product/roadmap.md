@@ -49,7 +49,8 @@
 
 ### Features
 
-- [x] Performance optimization - Code splitting, lazy loading, bundle size reduction `L` _(Complete: All phases implemented. Bundle reduced from 500KB target to 207.76KB actual (57.5% reduction). Lazy loading for OpenAI provider, UI components, and extractors)_
+- [x] Performance optimization - Code splitting, lazy loading, bundle size reduction `L` 
+- [ ] UI updates - Design changes, layout updates, polish for better user experience
 - [ ] Keyboard shortcuts - Power user shortcuts for common actions `S`
 - [ ] Multiple LLM provider support - Add Claude, Gemini, local models `L`
 - [ ] Full-text search in summaries - Search across all stored summaries `M`
