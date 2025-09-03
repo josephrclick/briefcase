@@ -327,17 +327,17 @@ describe("Performance Requirements", () => {
 
 ## Deployment & Monitoring
 
-### CI/CD Pipeline
+### Development Pipeline
 
-1. **Build & Test**: On every commit
-2. **Bundle Analysis**: Track size changes
-3. **Performance Metrics**: Monitor thresholds
-4. **Release**: Automated Chrome Web Store deployment
+1. **Build & Test**: Run locally with `npm test`
+2. **Bundle Analysis**: Check with `npm run analyze:bundle`
+3. **Performance Metrics**: Monitor via `performance-monitor.ts`
+4. **Release**: Manual Chrome Web Store deployment
 
 ### Production Monitoring
 
-- Bundle size tracking in GitHub Actions
 - Performance metrics via `performance-monitor.ts`
+- Bundle analysis with `rollup-plugin-visualizer`
 - Error tracking with source maps
 - User feedback collection (opt-in)
 
