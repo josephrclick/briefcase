@@ -1,7 +1,13 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
-  "extends": ["eslint:recommended", "@typescript-eslint/recommended"],
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "@typescript-eslint/recommended",
+    "plugin:storybook/recommended"
+  ],
   "env": {
     "browser": true,
     "webextensions": true,
@@ -14,9 +20,16 @@
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "error",
-      { "argsIgnorePattern": "^_" }
+      {
+        "argsIgnorePattern": "^_"
+      }
     ],
     "@typescript-eslint/no-explicit-any": "warn"
   },
-  "ignorePatterns": ["dist/", "node_modules/", "*.test.ts", "*.test.tsx"]
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "*.test.ts",
+    "*.test.tsx"
+  ]
 }
