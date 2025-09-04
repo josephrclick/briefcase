@@ -5,24 +5,21 @@
 
 echo "🚀 Setting up UI Development Workflow for Briefcase Extension..."
 
-# Install Storybook and related tools
-echo "📦 Installing Storybook..."
-npx storybook@latest init --yes
+# Check if Storybook is already installed
+if [ ! -d ".storybook" ] || [ ! -f "package.json" ] || ! grep -q "storybook" package.json; then
+  echo "📦 Installing Storybook..."
+  npx storybook@latest init --yes
+else
+  echo "✅ Storybook already installed, skipping..."
+fi
 
-# Install additional UI development dependencies
-echo "📦 Installing additional dependencies..."
-npm install --save-dev \
-  @storybook/addon-viewport \
-  @storybook/addon-docs \
-  @storybook/addon-controls \
-  @storybook/addon-actions \
-  chromatic \
-  @testing-library/preact \
-  @testing-library/jest-dom
-
-# Install Arco Design for professional components
-echo "📦 Installing Arco Design System..."
-npm install @arco-design/web-react
+# Install Arco Design if not already present
+if ! grep -q "@arco-design/web-react" package.json; then
+  echo "📦 Installing Arco Design System..."
+  npm install @arco-design/web-react
+else
+  echo "✅ Arco Design already installed, skipping..."
+fi
 
 # Create Storybook configuration
 echo "⚙️ Creating Storybook configuration..."

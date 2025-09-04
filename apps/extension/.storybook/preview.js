@@ -1,6 +1,6 @@
+import React from 'react';
 import '../sidepanel/index.css';
 import '../sidepanel/styles.css';
-import '@arco-design/web-react/dist/css/arco.css';
 
 /** @type { import('@storybook/react').Preview } */
 const preview = {
@@ -55,15 +55,14 @@ const preview = {
         document.documentElement.setAttribute('data-theme', theme);
       }
       
-      return (
-        <div data-theme={theme} style={{ 
+      return React.createElement('div', {
+        'data-theme': theme,
+        style: { 
           minHeight: '100vh',
           backgroundColor: theme === 'dark' ? '#1a1a1a' : '#ffffff',
           color: theme === 'dark' ? '#e0e0e0' : '#333333'
-        }}>
-          <Story />
-        </div>
-      );
+        }
+      }, React.createElement(Story));
     },
   ],
   globalTypes: {

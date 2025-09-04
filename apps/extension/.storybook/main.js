@@ -5,27 +5,19 @@ const config = {
     "../src/stories/**/*.stories.@(js|jsx|ts|tsx)"
   ],
   addons: [
-    "@storybook/addon-links",
     "@storybook/addon-essentials",
-    "@storybook/addon-interactions",
-    "@storybook/addon-viewport",
-    "@storybook/addon-docs",
-    "@storybook/addon-controls"
+    "@storybook/addon-a11y",
+    "@storybook/addon-viewport"
   ],
   framework: {
-    name: "@storybook/react-vite",
+    name: "@storybook/preact-vite",
     options: {},
   },
   docs: {
     autodocs: "tag",
   },
   viteFinal: (config) => {
-    // Handle Preact JSX
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "react": "preact/compat",
-      "react-dom": "preact/compat"
-    };
+    // Preact configuration is handled by @storybook/preact-vite
     return config;
   }
 };
